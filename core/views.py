@@ -438,3 +438,97 @@ def clear_datesheet(request):
 
 def home(request):
     return render(request, 'index.html')
+
+
+# ... (Imports remain the same) ...
+from .models import Squad, Membership, Transmission # Import new models
+from .forms import NoteForm, ExamForm, SquadForm, JoinSquadForm # Import new forms
+
+# ... (Keep existing views) ...
+
+@login_required(login_url='signin')
+def squad_hub(request):
+    # Get all squads the user belongs to
+    my_memberships = Membership.objects.filter(user=request.user)
+    my_squads = [m.squad for m in my_memberships]
+
+    create_form = SquadForm()
+    join_form = JoinSquadForm()
+
+    if request.method == 'POST':
+        # HANDLE CREATE
+        if 'create_squad' in request.POST:
+            create_form = SquadForm(request.POST)
+            if create_form.is_valid():
+                squad = create_form.save(commit=False)
+                squad.created_by = request.user
+                squad.save()
+                # Automatically add creator as Leader
+                Membership.objects.create(user=request.user, squad=squad, is_leader=True)
+                messages.success(request, f"Squadron '{squad.name}' deployed.")
+                return redirect('squad_hub')
+        
+        # HANDLE JOIN
+        elif 'join_squad' in request.POST:
+            join_form = JoinSquadForm(request.POST)
+            if join_form.is_valid():
+                code = join_form.cleaned_data['code']
+                try:
+                    target_squad = Squad.objects.get(code=code)
+                    if Membership.objects.filter(user=request.user, squad=target_squad).exists():
+                        messages.warning(request, "You are already an operative in this squadron.")
+                    else:
+                        Membership.objects.create(user=request.user, squad=target_squad)
+                        messages.success(request, f"Access granted: {target_squad.name}")
+                        return redirect('squad_hub')
+                except Squad.DoesNotExist:
+                    messages.error(request, "Invalid Access Code.")
+
+    context = {
+        'my_squads': my_squads,
+        'create_form': create_form,
+        'join_form': join_form,
+        'online_count': Profile.objects.filter(last_seen__gte=timezone.now() - timezone.timedelta(minutes=5)).exclude(user=request.user).count()
+    }
+    return render(request, 'squad_hub.html', context)
+
+# ... (Keep existing imports) ...
+
+@login_required(login_url='signin')
+def squad_detail(request, squad_id):
+    squad = get_object_or_404(Squad, id=squad_id)
+    
+    # Security Check: Ensure user is a member
+    if not Membership.objects.filter(user=request.user, squad=squad).exists():
+        messages.error(request, "Access Denied: You are not an operative of this squadron.")
+        return redirect('squad_hub')
+
+    # Handle Chat Message
+    if request.method == 'POST' and 'send_transmission' in request.POST:
+        content = request.POST.get('content')
+        if content:
+            Transmission.objects.create(squad=squad, sender=request.user, content=content)
+            return redirect('squad_detail', squad_id=squad.id)
+
+    # Get Data
+    members = Membership.objects.filter(squad=squad).select_related('user')
+    transmissions = squad.messages.all().order_by('timestamp') # Oldest first for chat log
+
+    context = {
+        'squad': squad,
+        'members': members,
+        'transmissions': transmissions,
+        'online_count': Profile.objects.filter(last_seen__gte=timezone.now() - timezone.timedelta(minutes=5)).exclude(user=request.user).count()
+    }
+    return render(request, 'squad_detail.html', context)
+
+# Add this under your squad_detail view
+@login_required(login_url='signin')
+def get_squad_messages(request, squad_id):
+    squad = get_object_or_404(Squad, id=squad_id)
+    # Security check (optional but recommended)
+    if not Membership.objects.filter(user=request.user, squad=squad).exists():
+        return HttpResponseForbidden()
+        
+    transmissions = squad.messages.all().order_by('timestamp')
+    return render(request, 'partials/chat_messages.html', {'transmissions': transmissions, 'user': request.user})

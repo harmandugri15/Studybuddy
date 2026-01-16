@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vault // {{ squad.name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100;400;700;900&family=Geist+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg: #030303; --card-bg: #09090b; --border: rgba(255, 255, 255, 0.08); --accent: #10b981; }
+        html, body { height: 100%; margin: 0; background-color: var(--bg); color: #fff; font-family: 'Geist', sans-serif; overflow-x: hidden; cursor: default; }
+        .bg-mesh { position: fixed; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px); background-size: 60px 60px; mask-image: radial-gradient(circle at center, black, transparent 90%); z-index: -1; }
+        
+        .sidebar { width: 100px; height: calc(100vh - 40px); position: fixed; top: 20px; left: 20px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border); border-radius: 30px; backdrop-filter: blur(20px); display: flex; flex-direction: column; align-items: center; padding: 40px 0; z-index: 100; }
+        .nav-item { width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 18px; margin-bottom: 24px; color: rgba(255,255,255,0.3); transition: all 0.3s; }
+        .nav-item:hover, .nav-item.active { background: white; color: black; box-shadow: 0 0 30px rgba(255,255,255,0.15); transform: scale(1.15); }
+        
+        .main-container { margin-left: 140px; min-height: 100vh; padding: 40px 60px; max-width: 1400px; }
+        .card-vault { background: #09090b; border: 1px solid var(--border); border-radius: 20px; overflow: hidden; }
+        
+        /* CHAT STYLES */
+        .chat-container { display: flex; flex-direction: column; height: 600px; }
+        .chat-log { flex: 1; overflow-y: auto; padding: 20px; space-y: 16px; scroll-behavior: smooth; }
+        .chat-input-area { padding: 20px; border-top: 1px solid var(--border); background: rgba(255,255,255,0.02); }
+        .chat-bubble { max-width: 70%; padding: 12px 16px; border-radius: 12px; font-size: 14px; line-height: 1.5; }
+        .chat-bubble.me { background: var(--accent); color: black; align-self: flex-end; border-bottom-right-radius: 2px; margin-left: auto; }
+        .chat-bubble.them { background: rgba(255,255,255,0.1); color: white; align-self: flex-start; border-bottom-left-radius: 2px; }
+        
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+    </style>
+</head>
+<body>
+    <div class="bg-mesh"></div>
+
+    <nav class="sidebar">
+        <a href="{% url 'home' %}" class="w-12 h-12 bg-white rounded-2xl mb-16 flex items-center justify-center text-black font-black text-xl italic">V</a>
+        <a href="{% url 'dashboard' %}" class="nav-item"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg></a>
+        <a href="{% url 'notes_hub' %}" class="nav-item"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg></a>
+        <a href="{% url 'topics_hub' %}" class="nav-item"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg></a>
+        <a href="{% url 'squad_hub' %}" class="nav-item active"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg></a>
+        <a href="{% url 'datesheet_hub' %}" class="nav-item"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></a>
+    </nav>
+
+    <main class="main-container">
+        <header class="flex justify-between items-end mb-8">
+            <div class="flex items-center gap-4">
+                <a href="{% url 'squad_hub' %}" class="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-white/50 hover:bg-white hover:text-black transition">←</a>
+                <div>
+                    <span class="font-mono text-emerald-500 text-xs tracking-widest uppercase">Secure Channel // {{ squad.code }}</span>
+                    <h1 class="text-4xl font-black italic tracking-tighter text-white uppercase">{{ squad.name }}</h1>
+                </div>
+            </div>
+            <div class="flex -space-x-2">
+                {% for member in members %}
+                <div class="w-10 h-10 rounded-full bg-neutral-800 border-2 border-black flex items-center justify-center text-sm font-bold text-white relative group">
+                    {{ member.user.username|make_list|first|upper }}
+                    <div class="absolute bottom-full mb-2 bg-black text-xs px-2 py-1 rounded hidden group-hover:block whitespace-nowrap border border-white/20">{{ member.user.username }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </header>
+
+        <div class="grid grid-cols-12 gap-6">
+            
+            <div class="col-span-8">
+                <div class="card-vault chat-container">
+                    <div class="chat-log custom-scrollbar" id="chatLog">
+                        {% for msg in transmissions %}
+                            <div class="flex flex-col {% if msg.sender == user %}items-end{% else %}items-start{% endif %}">
+                                <div class="chat-bubble {% if msg.sender == user %}me{% else %}them{% endif %}">
+                                    {% if msg.sender != user %}
+                                        <span class="block text-[10px] font-bold opacity-50 mb-1 uppercase">{{ msg.sender.username }}</span>
+                                    {% endif %}
+                                    {{ msg.content }}
+                                </div>
+                                <span class="text-[9px] text-white/20 mt-1 px-1">{{ msg.timestamp|date:"H:i" }}</span>
+                            </div>
+                        {% empty %}
+                            <div class="h-full flex flex-col items-center justify-center opacity-20">
+                                <svg class="w-12 h-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                                <p class="font-mono text-xs">CHANNEL ESTABLISHED. SILENCE DETECTED.</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="chat-input-area">
+                        <form method="post" class="flex gap-4">
+                            {% csrf_token %}
+                            <input type="text" name="content" class="flex-1 bg-transparent border-none text-white focus:ring-0 placeholder-white/30" placeholder="Transmit message..." autocomplete="off" autofocus>
+                            <button type="submit" name="send_transmission" class="p-3 bg-emerald-500 rounded-lg text-black hover:bg-emerald-400 transition">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-span-4 space-y-6">
+                <div class="card-vault p-6">
+                    <h3 class="font-bold text-sm text-gray-400 mb-4 uppercase tracking-widest">Operation Details</h3>
+                    <p class="text-sm text-white/80 leading-relaxed mb-6">{{ squad.description|default:"No mission parameters defined." }}</p>
+                    
+                    <div class="bg-white/5 rounded-lg p-4 flex items-center justify-between">
+                        <div>
+                            <p class="text-[10px] text-emerald-500 uppercase font-bold">Secure Access Code</p>
+                            <p class="font-mono text-xl font-bold tracking-widest">{{ squad.code }}</p>
+                        </div>
+                        <button onclick="navigator.clipboard.writeText('{{ squad.code }}')" class="text-white/30 hover:text-white transition" title="Copy">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card-vault p-6">
+                    <h3 class="font-bold text-sm text-gray-400 mb-4 uppercase tracking-widest">Roster</h3>
+                    <div class="space-y-3">
+                        {% for member in members %}
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold">{{ member.user.username|make_list|first|upper }}</div>
+                                <div>
+                                    <p class="text-sm font-bold">{{ member.user.username }}</p>
+                                    <p class="text-[10px] text-white/40">Joined {{ member.joined_at|date:"M d" }}</p>
+                                </div>
+                            </div>
+                            {% if member.is_leader %}
+                                <span class="text-[9px] bg-yellow-500/20 text-yellow-500 px-2 py-0.5 rounded border border-yellow-500/30">LEADER</span>
+                            {% else %}
+                                <span class="text-[9px] bg-white/5 text-white/30 px-2 py-0.5 rounded">OP</span>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+<script>
+        const chatLog = document.getElementById('chatLog');
+        
+        // 1. Function to scroll to bottom
+        function scrollToBottom() {
+            chatLog.scrollTop = chatLog.scrollHeight;
+        }
+
+        // 2. The Pulse (Fetch messages every 2 seconds)
+        function fetchMessages() {
+            // We use the URL pattern we just created
+            fetch("{% url 'get_squad_messages' squad.id %}")
+                .then(response => response.text())
+                .then(html => {
+                    // Only update if the content is different (prevents jitter)
+                    // Or just update content blindly for simplicity:
+                    chatLog.innerHTML = html;
+                });
+        }
+
+        // Run immediately on load
+        scrollToBottom();
+
+        // Start the heartbeat (2000ms = 2 seconds)
+        setInterval(fetchMessages, 2000);
+    </script>
+</body>
+</html>

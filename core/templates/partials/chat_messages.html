@@ -1,0 +1,15 @@
+{% for msg in transmissions %}
+    <div class="flex flex-col {% if msg.sender == user %}items-end{% else %}items-start{% endif %}">
+        <div class="chat-bubble {% if msg.sender == user %}me{% else %}them{% endif %}">
+            {% if msg.sender != user %}
+                <span class="block text-[10px] font-bold opacity-50 mb-1 uppercase">{{ msg.sender.username }}</span>
+            {% endif %}
+            {{ msg.content }}
+        </div>
+        <span class="text-[9px] text-white/20 mt-1 px-1">{{ msg.timestamp|date:"H:i" }}</span>
+    </div>
+{% empty %}
+    <div class="h-full flex flex-col items-center justify-center opacity-20">
+        <p class="font-mono text-xs">CHANNEL ESTABLISHED. SILENCE DETECTED.</p>
+    </div>
+{% endfor %}

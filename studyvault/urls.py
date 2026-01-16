@@ -21,7 +21,13 @@ urlpatterns = [
     path('rename_mission/<int:exam_id>/', views.rename_exam, name='rename_exam'),
     path('delete_exam/<int:exam_id>/', views.delete_exam, name='delete_exam'),
     path('clear_datesheet/', views.clear_datesheet, name='clear_datesheet'),
+    path('squads/', views.squad_hub, name='squad_hub'),
+    # NEW LINE:
+    path('squads/<int:squad_id>/', views.squad_detail, name='squad_detail'),
+    # NEW LINE for the pulse
+    path('squads/<int:squad_id>/messages/', views.get_squad_messages, name='get_squad_messages'),
 ]
+
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

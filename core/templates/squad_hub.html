@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vault // Squadrons</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100;400;700;900&family=Geist+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg: #030303; --card-bg: #09090b; --border: rgba(255, 255, 255, 0.08); --accent: #10b981; }
+        html, body { height: 100%; margin: 0; background-color: var(--bg); color: #fff; font-family: 'Geist', sans-serif; overflow-x: hidden; cursor: default; }
+        .bg-mesh { position: fixed; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px); background-size: 60px 60px; mask-image: radial-gradient(circle at center, black, transparent 90%); z-index: -1; }
+        
+        .sidebar { width: 100px; height: calc(100vh - 40px); position: fixed; top: 20px; left: 20px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border); border-radius: 30px; backdrop-filter: blur(20px); display: flex; flex-direction: column; align-items: center; padding: 40px 0; z-index: 100; }
+        .nav-item { width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 18px; margin-bottom: 24px; color: rgba(255,255,255,0.3); transition: all 0.3s; }
+        .nav-item:hover, .nav-item.active { background: white; color: black; box-shadow: 0 0 30px rgba(255,255,255,0.15); transform: scale(1.15); }
+        
+        .main-container { margin-left: 140px; min-height: 100vh; padding: 40px 60px; max-width: 1400px; }
+        
+        .card-squad { background: linear-gradient(145deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01)); border: 1px solid var(--border); border-radius: 20px; padding: 24px; transition: all 0.3s; position: relative; overflow: hidden; height: 100%; display: flex; flex-direction: column; justify-content: space-between; }
+        .card-squad:hover { border-color: var(--accent); transform: translateY(-4px); box-shadow: 0 10px 40px -10px rgba(16, 185, 129, 0.2); }
+        
+        .mono-tag { font-family: 'Geist Mono'; font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: rgba(255,255,255,0.4); }
+
+        /* MODAL STYLES (MATCHING DASHBOARD) */
+        dialog::backdrop { background-color: rgba(0, 0, 0, 0.8); backdrop-filter: blur(5px); }
+        dialog input, dialog textarea { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 12px; border-radius: 8px; color: white; margin-top: 8px; font-family: 'Geist Mono'; outline: none; }
+        dialog input:focus, dialog textarea:focus { border-color: #10b981; background: rgba(255,255,255,0.08); box-shadow: 0 0 20px rgba(16, 185, 129, 0.15); }
+    </style>
+</head>
+<body>
+    <div class="bg-mesh"></div>
+
+    <nav class="sidebar">
+        <a href="{% url 'home' %}" class="w-12 h-12 bg-white rounded-2xl mb-16 flex items-center justify-center text-black font-black text-xl italic">V</a>
+        <a href="{% url 'dashboard' %}" class="nav-item"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg></a>
+        <a href="{% url 'notes_hub' %}" class="nav-item"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg></a>
+        <a href="{% url 'topics_hub' %}" class="nav-item"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg></a>
+        <a href="{% url 'squad_hub' %}" class="nav-item active"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg></a>
+        <a href="{% url 'datesheet_hub' %}" class="nav-item"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></a>
+    </nav>
+
+    <main class="main-container">
+        <header class="flex justify-between items-end mb-12">
+            <div>
+                <span class="mono-tag opacity-40">System // Collaboration</span>
+                <h1 class="text-5xl font-black italic tracking-tighter mt-2 text-white">Squadron <span class="text-emerald-500">Command.</span></h1>
+            </div>
+            <div class="flex gap-4">
+                <button onclick="document.getElementById('join-modal').showModal()" class="px-6 py-3 rounded-lg border border-white/20 text-white font-bold hover:bg-white/10 uppercase text-xs tracking-wider">Join via Code</button>
+                <button onclick="document.getElementById('create-modal').showModal()" class="px-6 py-3 rounded-lg bg-emerald-500 text-black font-bold hover:bg-emerald-400 uppercase text-xs tracking-wider">Deploy Squad</button>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for squad in my_squads %}
+            <a href="{% url 'squad_detail' squad.id %}" class="block h-full">
+                <div class="card-squad group cursor-pointer">
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-2xl font-bold uppercase italic group-hover:text-emerald-400 transition-colors">{{ squad.name }}</h3>
+                            <span class="mono-tag bg-emerald-500/10 text-emerald-500 px-2 py-1 rounded">{{ squad.members.count }} OPS</span>
+                        </div>
+                        <p class="text-sm text-gray-400 mb-6 line-clamp-2">{{ squad.description|default:"No briefing available." }}</p>
+                    </div>
+                    
+                    <div class="flex justify-between items-center border-t border-white/10 pt-4 mt-auto">
+                        <div class="flex -space-x-2">
+                            {% for member in squad.members.all|slice:":3" %}
+                            <div class="w-8 h-8 rounded-full bg-neutral-800 border border-black flex items-center justify-center text-xs font-bold">{{ member.user.username|make_list|first|upper }}</div>
+                            {% endfor %}
+                        </div>
+                        <span class="font-mono text-emerald-400 text-xs tracking-wider">{{ squad.code }}</span>
+                    </div>
+                </div>
+            </a>
+            {% empty %}
+            <div class="col-span-3 flex flex-col items-center justify-center py-20 opacity-30 border border-dashed border-white/20 rounded-xl">
+                <h2 class="text-2xl font-bold mb-2">No Active Squadrons</h2>
+                <p>Deploy a new unit or join an existing operation.</p>
+            </div>
+            {% endfor %}
+            </div>
+    </main>
+
+    <dialog id="create-modal" class="bg-transparent p-0 rounded-2xl shadow-2xl backdrop:backdrop-blur-md">
+        <div class="bg-[#0c0c0e] border border-white/10 w-[450px] p-8 rounded-2xl relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-emerald-500 to-transparent"></div>
+            
+            <div class="flex justify-between items-center mb-8">
+                <h3 class="text-xl font-bold font-mono tracking-wider text-white">DEPLOY SQUADRON</h3>
+                <button type="button" onclick="document.getElementById('create-modal').close()" class="text-white/30 hover:text-white transition-colors cursor-pointer">✕</button>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="space-y-4">
+                    <div class="space-y-2">
+                        <label class="mono-tag text-emerald-400">Unit Designation</label>
+                        {{ create_form.name }}
+                    </div>
+                    <div class="space-y-2">
+                        <label class="mono-tag text-emerald-400">Mission Parameters</label>
+                        {{ create_form.description }}
+                    </div>
+                </div>
+                <div class="flex gap-3 mt-8">
+                    <button type="button" onclick="document.getElementById('create-modal').close()" class="flex-1 py-3 rounded-xl border border-white/10 text-white/50 font-bold uppercase text-xs hover:bg-white/5 hover:text-white transition-all">ABORT</button>
+                    <button type="submit" name="create_squad" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 text-black font-bold uppercase text-xs hover:shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:scale-[1.02] transition-all">DEPLOY</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
+
+    <dialog id="join-modal" class="bg-transparent p-0 rounded-2xl shadow-2xl backdrop:backdrop-blur-md">
+        <div class="bg-[#0c0c0e] border border-white/10 w-[450px] p-8 rounded-2xl relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-emerald-500 to-transparent"></div>
+            
+            <div class="flex justify-between items-center mb-8">
+                <h3 class="text-xl font-bold font-mono tracking-wider text-white">JOIN OPERATION</h3>
+                <button type="button" onclick="document.getElementById('join-modal').close()" class="text-white/30 hover:text-white transition-colors cursor-pointer">✕</button>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="space-y-4">
+                    <div class="space-y-2">
+                        <label class="mono-tag text-emerald-400">Access Code</label>
+                        {{ join_form.code }}
+                    </div>
+                </div>
+                <div class="flex gap-3 mt-8">
+                    <button type="button" onclick="document.getElementById('join-modal').close()" class="flex-1 py-3 rounded-xl border border-white/10 text-white/50 font-bold uppercase text-xs hover:bg-white/5 hover:text-white transition-all">CANCEL</button>
+                    <button type="submit" name="join_squad" class="flex-1 py-3 rounded-xl bg-white text-black font-bold uppercase text-xs hover:bg-gray-200 transition-all">ACCESS</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
+</body>
+</html>

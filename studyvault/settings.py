@@ -38,8 +38,17 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'core'
+    'core',
+    
+    # --- ALLAUTH CONFIGURATION ---
+    'django.contrib.sites',      # Required by allauth
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google', # Google Provider
 ]
+
+SITE_ID = 2  # Required
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -50,6 +59,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'core.middleware.UpdateLastSeenMiddleware', 
+    "allauth.account.middleware.AccountMiddleware"
 ]
 
 
@@ -124,3 +134,38 @@ USE_TZ = True
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+AUTHENTICATION_BACKENDS = [
+    # Needed to login by username in Django admin, regardless of `allauth`
+    'django.contrib.auth.backends.ModelBackend',
+    # `allauth` specific authentication methods, such as login by e-mail
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
+# --- REDIRECTS ---
+LOGIN_REDIRECT_URL = 'dashboard'
+LOGOUT_REDIRECT_URL = 'signin'
+
+# --- ALLAUTH SETTINGS ---
+LOGIN_REDIRECT_URL = 'dashboard'
+LOGOUT_REDIRECT_URL = 'home'
+
+# Allow email to be used as login
+ACCOUNT_AUTHENTICATION_METHOD = 'username_email' 
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = True
+
+# ⚡ CRITICAL FIX: Skip the "Confirm Signup" page
+SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_LOGIN_ON_GET = True
+ACCOUNT_EMAIL_VERIFICATION = "none"  # Don't ask to verify email again since Google did it
+
+# --- SESSION SECURITY (The 24-Hour Rule) ---
+# 86400 seconds = 24 hours
+SESSION_COOKIE_AGE = 86400  
+
+# Reset the timer every time they click a link so they stay logged in while active
+SESSION_SAVE_EVERY_REQUEST = True 
+
+# Security (Optional but good)
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False # True = logout on close, False = remember for 24h

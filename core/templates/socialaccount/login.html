@@ -1,0 +1,44 @@
+{% load socialaccount %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vault // Uplink Verification</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100;400;700;900&family=Geist+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg: #030303; --accent: #10b981; }
+        html, body { height: 100%; margin: 0; background-color: var(--bg); color: #fff; font-family: 'Geist', sans-serif; }
+        .bg-mesh { position: fixed; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px); background-size: 60px 60px; mask-image: radial-gradient(circle at center, black, transparent 90%); z-index: -1; }
+    </style>
+</head>
+<body class="flex items-center justify-center relative">
+    <div class="bg-mesh"></div>
+
+    <div class="w-full max-w-md p-8 bg-[#09090b] border border-white/10 rounded-2xl relative overflow-hidden backdrop-blur-xl text-center">
+        <div class="absolute -top-20 -left-20 w-60 h-60 bg-emerald-500/10 blur-[80px] rounded-full"></div>
+
+        <div class="relative z-10">
+            <div class="w-16 h-16 bg-white text-black text-3xl font-black italic flex items-center justify-center rounded-2xl mx-auto mb-6 shadow-[0_0_20px_rgba(255,255,255,0.2)]">V</div>
+            
+            <h1 class="text-2xl font-bold tracking-tight mb-2">Confirm Uplink</h1>
+            <p class="text-white/50 text-sm mb-8">
+                Initiating secure connection via <strong class="text-white">{{ provider.name }}</strong>. 
+                <br>Please confirm identity transfer.
+            </p>
+
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="w-full py-4 bg-emerald-500 text-black font-bold rounded-lg hover:bg-emerald-400 transition-all uppercase text-xs tracking-widest shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:scale-[1.02]">
+                    Proceed to Google
+                </button>
+            </form>
+            
+            <div class="mt-6">
+                <a href="{% url 'signin' %}" class="text-xs font-mono text-white/30 hover:text-white transition uppercase tracking-widest">Abort Sequence</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

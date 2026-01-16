@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.urls import path
+from django.urls import path,include
 from core import views
 from django.conf import settings
 from django.conf.urls.static import static
@@ -25,7 +25,9 @@ urlpatterns = [
     # NEW LINE:
     path('squads/<int:squad_id>/', views.squad_detail, name='squad_detail'),
     # NEW LINE for the pulse
+    path('signout/', views.signout, name='signout'),
     path('squads/<int:squad_id>/messages/', views.get_squad_messages, name='get_squad_messages'),
+    path('accounts/', include('allauth.urls')),
 ]
 
 

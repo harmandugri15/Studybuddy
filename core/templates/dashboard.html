@@ -57,6 +57,11 @@
     <a href="{% url 'squad_hub' %}" class="nav-item"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg></a>
     
     <a href="{% url 'datesheet_hub' %}" class="nav-item"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></a>
+<div class="mt-auto mb-6">
+        <a href="{% url 'signout' %}" class="nav-item group" title="Disconnect">
+            <svg class="w-6 h-6 text-red-500/50 group-hover:text-red-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        </a>
+    </div>
 </nav>
 
     <main class="main-container">
@@ -70,7 +75,9 @@
                     <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_10px_#10b981]"></div>
                     <span class="mono-tag text-emerald-400 font-bold">{{ online_count }} Active</span>
                 </div>
-                <div class="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center font-bold text-lg">{{ user.username|make_list|first|upper }}</div>
+                <button onclick="document.getElementById('profile-modal').showModal()" class="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 border border-white/20 flex items-center justify-center text-black font-bold text-sm hover:scale-110 transition-transform shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+    {{ user.username|make_list|first|upper }}
+</button>
             </div>
         </header>
 
@@ -268,5 +275,47 @@
             });
         });
     </script>
+
+    <dialog id="profile-modal" class="bg-transparent p-0 rounded-2xl shadow-2xl backdrop:backdrop-blur-md">
+    <div class="bg-[#09090b] border border-white/10 w-[400px] rounded-2xl relative overflow-hidden">
+        
+        <div class="h-24 bg-gradient-to-r from-emerald-900/40 to-black relative">
+            <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-30"></div>
+            <button onclick="document.getElementById('profile-modal').close()" class="absolute top-4 right-4 text-white/50 hover:text-white transition">✕</button>
+        </div>
+
+        <div class="px-6 pb-6 -mt-10 relative">
+            <div class="flex justify-between items-end mb-4">
+                <div class="w-20 h-20 rounded-2xl bg-black border-2 border-emerald-500 flex items-center justify-center text-3xl font-black text-white shadow-xl relative z-10">
+                    {{ user.username|make_list|first|upper }}
+                </div>
+                <span class="mono-tag bg-emerald-500/10 text-emerald-500 px-2 py-1 rounded border border-emerald-500/20">OPERATIVE</span>
+            </div>
+
+            <h2 class="text-2xl font-bold text-white tracking-tight">{{ user.username }}</h2>
+            <p class="text-sm text-gray-400 font-mono mb-6">{{ user.email }}</p>
+
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <div class="p-3 bg-white/5 rounded-lg border border-white/5">
+                    <p class="text-[10px] uppercase tracking-widest text-gray-500 mb-1">Status</p>
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                        <span class="text-xs font-bold text-emerald-400">ONLINE</span>
+                    </div>
+                </div>
+                <div class="p-3 bg-white/5 rounded-lg border border-white/5">
+                    <p class="text-[10px] uppercase tracking-widest text-gray-500 mb-1">Joined</p>
+                    <span class="text-xs font-bold text-white">{{ user.date_joined|date:"M d, Y" }}</span>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <a href="{% url 'signout' %}" class="block w-full py-3 text-center bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-xs font-bold uppercase tracking-widest hover:bg-red-500 hover:text-black transition">
+                    Disconnect Session
+                </a>
+            </div>
+        </div>
+    </div>
+</dialog>
 </body>
 </html>

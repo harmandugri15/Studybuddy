@@ -13,6 +13,7 @@ import re
 from datetime import datetime, timedelta
 from collections import Counter
 import json
+from django.contrib.auth import logout
 
 # --- PDF & OCR LIBRARIES ---
 import pdfplumber
@@ -24,7 +25,15 @@ from PIL import Image, ImageEnhance
 POPPLER_PATH = r"D:\Release-25.12.0-0\poppler-25.12.0\Library\bin" 
 pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
+def signout(request):
+    logout(request)
+    return redirect('home')
+
 def signin(request):
+    
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+    
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)
         if form.is_valid():

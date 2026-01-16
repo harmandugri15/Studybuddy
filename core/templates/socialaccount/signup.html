@@ -1,0 +1,50 @@
+{% load socialaccount %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vault // Identity Creation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100;400;700;900&family=Geist+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg: #030303; --accent: #10b981; }
+        html, body { height: 100%; margin: 0; background-color: var(--bg); color: #fff; font-family: 'Geist', sans-serif; }
+        .bg-mesh { position: fixed; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px); background-size: 60px 60px; mask-image: radial-gradient(circle at center, black, transparent 90%); z-index: -1; }
+        input { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 12px; border-radius: 8px; color: white; outline: none; margin-bottom: 16px; font-family: 'Geist Mono'; }
+        input:focus { border-color: #10b981; background: rgba(255,255,255,0.08); }
+        label { display: none; } /* Hide default labels for cleaner look */
+    </style>
+</head>
+<body class="flex items-center justify-center relative">
+    <div class="bg-mesh"></div>
+
+    <div class="w-full max-w-md p-8 bg-[#09090b] border border-white/10 rounded-2xl relative overflow-hidden backdrop-blur-xl text-center">
+        <div class="absolute -top-20 -right-20 w-60 h-60 bg-emerald-500/10 blur-[80px] rounded-full"></div>
+
+        <div class="relative z-10">
+            <div class="w-16 h-16 bg-white text-black text-3xl font-black italic flex items-center justify-center rounded-2xl mx-auto mb-6 shadow-[0_0_20px_rgba(255,255,255,0.2)]">V</div>
+            
+            <h1 class="text-2xl font-bold tracking-tight mb-2">Finalize Identity</h1>
+            <p class="text-white/50 text-sm mb-6">
+                Google Uplink successful. <br>Please confirm your operative handle.
+            </p>
+
+            <form class="signup" id="signup_form" method="post" action="{% url 'socialaccount_signup' %}">
+                {% csrf_token %}
+                
+                {% for field in form %}
+                    {% if field.errors %}
+                        <div class="text-red-500 text-xs mb-2 text-left">{{ field.errors }}</div>
+                    {% endif %}
+                    {{ field }}
+                {% endfor %}
+
+                <button type="submit" class="w-full py-4 bg-emerald-500 text-black font-bold rounded-lg hover:bg-emerald-400 transition-all uppercase text-xs tracking-widest shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:scale-[1.02] mt-4">
+                    Create Operative Profile
+                </button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

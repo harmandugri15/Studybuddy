@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vault // Mission Objectives</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100;400;700;900&family=Geist+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg: #030303; --zinc-900: #09090b; --border: rgba(255, 255, 255, 0.08); }
+        html, body { height: 100%; margin: 0; background-color: var(--bg); color: #fff; font-family: 'Geist', sans-serif; overflow: hidden; cursor: none; }
+        .bg-mesh { position: fixed; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px); background-size: 60px 60px; mask-image: radial-gradient(circle at center, black, transparent 90%); z-index: -1; }
+        .sidebar { width: 100px; height: calc(100vh - 40px); position: fixed; top: 20px; left: 20px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border); border-radius: 30px; backdrop-filter: blur(20px); display: flex; flex-direction: column; align-items: center; padding: 40px 0; z-index: 100; }
+        .nav-item { width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 18px; margin-bottom: 24px; transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1); color: rgba(255,255,255,0.3); }
+        .nav-item:hover, .nav-item.active { background: white; color: black; box-shadow: 0 0 30px rgba(255,255,255,0.15); transform: scale(1.15); }
+        .main-container { margin-left: 140px; height: 100vh; overflow-y: auto; padding: 40px 60px 100px 20px; }
+        .card-vault { background: linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%); border: 1px solid var(--border); border-radius: 24px; transition: all 0.3s ease; position: relative; overflow: hidden; }
+        .mono-tag { font-family: 'Geist Mono'; font-size: 10px; text-transform: uppercase; letter-spacing: 0.2em; color: rgba(255,255,255,0.4); }
+        .cyber-checkbox { appearance: none; width: 20px; height: 20px; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; cursor: pointer; position: relative; flex-shrink: 0; }
+        .cyber-checkbox:checked { background: #fff; border-color: #fff; box-shadow: 0 0 10px #fff; }
+        .cyber-checkbox:checked::after { content: '✓'; position: absolute; color: black; font-size: 14px; font-weight: bold; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .rename-input { background: transparent; border: none; border-bottom: 1px solid white; color: white; width: 100%; outline: none; font-size: 14px; padding: 4px 0; }
+        
+        /* Exam Title Edit */
+        .exam-title-input {
+            background: transparent; border: none; border-bottom: 2px solid white; 
+            color: white; width: 100%; outline: none; 
+            font-size: 2.25rem; font-weight: 700; text-transform: uppercase;
+        }
+
+        /* Collapse Styles */
+        details > summary { list-style: none; cursor: pointer; outline: none; }
+        details > summary::-webkit-details-marker { display: none; }
+        details[open] > summary svg { transform: rotate(180deg); }
+        
+        #c-ring, #c-dot { pointer-events: none; position: fixed; border-radius: 50%; z-index: 1000; transform: translate(-50%, -50%); }
+        #c-ring { width: 40px; height: 40px; border: 1px solid rgba(255,255,255,0.2); transition: 0.1s; }
+        #c-dot { width: 4px; height: 4px; background: #fff; box-shadow: 0 0 10px #fff; }
+        .msg-toast { animation: slideIn 0.5s cubic-bezier(0.19, 1, 0.22, 1); }
+        @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    </style>
+</head>
+<body>
+    <div id="c-ring"></div><div id="c-dot"></div>
+    <div class="bg-mesh"></div>
+
+    <nav class="sidebar">
+        <a href="{% url 'home' %}" class="w-12 h-12 bg-white rounded-2xl mb-16 flex items-center justify-center text-black font-black text-xl italic">V</a>
+        <a href="{% url 'dashboard' %}" class="nav-item"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg></a>
+        <a href="{% url 'notes_hub' %}" class="nav-item"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg></a>
+        <a href="#" class="nav-item active"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg></a>
+    </nav>
+
+    <main class="main-container">
+        {% if messages %}
+        <div class="mb-8 flex flex-col gap-2">
+            {% for message in messages %}
+            <div class="msg-toast bg-white/10 border border-white/20 text-white px-6 py-4 rounded-xl flex items-center gap-4 shadow-[0_0_30px_rgba(255,255,255,0.1)]">
+                <div class="w-8 h-8 bg-white text-black rounded-full flex items-center justify-center font-bold">!</div>
+                <p class="text-sm font-mono uppercase tracking-wider">{{ message }}</p>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <header class="flex justify-between items-end mb-16">
+            <div>
+                <span class="mono-tag opacity-40">System // Checklists</span>
+                <h1 class="text-6xl font-black italic tracking-tighter mt-2">Mission <span class="text-white/20">Protocol.</span></h1>
+            </div>
+        </header>
+
+        {% if exams %}
+            <div class="space-y-12">
+                {% for exam in exams %}
+                <div class="card-vault p-10 relative overflow-visible group">
+                    <div class="absolute top-0 left-0 h-1 bg-gradient-to-r from-emerald-500 to-transparent transition-all duration-1000" style="width: {{ exam.progress }}%"></div>
+
+                    <div class="flex justify-between items-start mb-12">
+                        <div class="flex-1 mr-8">
+                            <span class="mono-tag text-emerald-400">Targeting</span>
+                            
+                            <div onclick="enableExamRename('{{ exam.id }}')" class="cursor-pointer group/title flex items-center gap-4">
+                                <div id="exam-view-{{ exam.id }}" class="flex items-center gap-3">
+                                    <h2 class="text-4xl font-bold mt-2 uppercase">{{ exam.subject }}</h2>
+                                    <svg class="w-4 h-4 opacity-0 group-hover/title:opacity-50 mt-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                </div>
+                                
+                                <form id="exam-rename-{{ exam.id }}" action="{% url 'rename_exam' exam.id %}" method="post" class="hidden w-full max-w-md mt-2">
+                                    {% csrf_token %}
+                                    <input type="text" name="new_subject" value="{{ exam.subject }}" class="exam-title-input" onblur="this.form.submit()" onkeydown="if(event.key === 'Enter') this.form.submit()">
+                                </form>
+                            </div>
+
+                            <p class="text-sm font-mono opacity-40 mt-1">Scheduled for {{ exam.date|date:"F j, Y" }}</p>
+                        </div>
+                        <div class="text-right flex flex-col items-end gap-2">
+                            <span class="text-5xl font-black italic opacity-20 group-hover:opacity-100 transition-opacity">{{ exam.progress }}%</span>
+                            <a href="{% url 'delete_mission' exam.id %}" onclick="return confirm('Abort mission?')" class="text-[9px] font-bold text-red-500 border border-red-500/20 px-3 py-1 rounded hover:bg-red-500 hover:text-white uppercase transition">Abort</a>
+                        </div>
+                    </div>
+
+                    {% regroup exam.topics.all by source_note as topic_groups %}
+
+                    <div class="space-y-6">
+                        {% for group in topic_groups %}
+                        <details class="group/file" {% if forloop.first %}open{% endif %}>
+                            <summary class="flex items-center gap-4 cursor-pointer mb-4 p-2 hover:bg-white/5 rounded-lg transition">
+                                <div class="w-6 h-6 border border-white/20 rounded flex items-center justify-center transition-transform group-open/file:rotate-90">
+                                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                </div>
+                                <span class="mono-tag text-white font-bold bg-white/10 px-3 py-1 rounded">
+                                    {% if group.grouper %}{{ group.grouper.title }}{% else %}MANUAL OBJECTIVES{% endif %}
+                                </span>
+                                <div class="h-px flex-1 bg-white/10"></div>
+                            </summary>
+
+                            <div class="pl-10 space-y-2">
+                                {% for topic in group.list %}
+                                <div class="flex items-start gap-4 py-2 border-b border-white/5 last:border-0 hover:bg-white/5 px-4 rounded transition group/item">
+                                    
+                                    <form method="post" class="mt-1">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="toggle_topic" value="true">
+                                        <input type="hidden" name="topic_id" value="{{ topic.id }}">
+                                        <button type="submit" class="cyber-checkbox {% if topic.is_completed %}bg-white border-white{% endif %}"></button>
+                                    </form>
+
+                                    <div class="flex-1" onclick="enableTopicRename('{{ topic.id }}')">
+                                        <div id="topic-view-{{ topic.id }}" class="cursor-text">
+                                            <p class="text-sm font-medium leading-relaxed {% if topic.is_completed %}line-through opacity-30{% endif %}">
+                                                {{ topic.name }}
+                                            </p>
+                                        </div>
+                                        
+                                        <form id="topic-rename-{{ topic.id }}" action="{% url 'rename_topic' topic.id %}" method="post" class="hidden">
+                                            {% csrf_token %}
+                                            <input type="text" name="new_name" value="{{ topic.name }}" class="rename-input" onblur="this.form.submit()" onkeydown="if(event.key === 'Enter') this.form.submit()">
+                                        </form>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </details>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="flex flex-col items-center justify-center h-[50vh] text-center opacity-50">
+                <h2 class="text-2xl font-bold">Protocol Empty</h2>
+                <p class="mono-tag mt-2">Upload CHO files to generate tasks.</p>
+            </div>
+        {% endif %}
+    </main>
+
+    <script>
+        function enableTopicRename(id) {
+            document.getElementById(`topic-view-${id}`).classList.add('hidden');
+            const form = document.getElementById(`topic-rename-${id}`);
+            form.classList.remove('hidden');
+            form.querySelector('input').focus();
+        }
+
+        function enableExamRename(id) {
+            document.getElementById(`exam-view-${id}`).classList.add('hidden');
+            const form = document.getElementById(`exam-rename-${id}`);
+            form.classList.remove('hidden');
+            form.querySelector('input').focus();
+        }
+
+        const ring = document.getElementById('c-ring');
+        const dot = document.getElementById('c-dot');
+        document.addEventListener('mousemove', (e) => {
+            ring.style.left = e.clientX + 'px'; ring.style.top = e.clientY + 'px';
+            dot.style.left = e.clientX + 'px'; dot.style.top = e.clientY + 'px';
+        });
+    </script>
+</body>
+</html>

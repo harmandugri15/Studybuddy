@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyBuddy — Beyond the Books</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100;300;400;500;600;700;800;900&family=Geist+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #030303;
+            --zinc-900: #111111;
+            --zinc-800: #1a1a1a;
+            --border: rgba(255, 255, 255, 0.12);
+            --border-bright: rgba(255, 255, 255, 0.25);
+        }
+
+        body {
+            background-color: var(--bg);
+            color: #fff;
+            font-family: 'Geist', sans-serif;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            cursor: none; /* Hide default cursor to use the custom shadow */
+        }
+
+        /* Cursor Shadow Effect */
+        #cursor-shadow {
+            position: fixed;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0) 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            transition: width 0.3s, height 0.3s;
+            will-change: left, top;
+        }
+
+        /* Small central dot for the actual cursor position */
+        #cursor-dot {
+            position: fixed;
+            width: 6px;
+            height: 6px;
+            background: white;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10000;
+            transform: translate(-50%, -50%);
+        }
+
+        nav {
+            position: fixed;
+            top: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 1200px;
+            height: 56px;
+            background: rgba(10, 10, 10, 0.4);
+            backdrop-filter: blur(16px) saturate(180%);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 8px 0 24px;
+        }
+
+        .grid-overlay {
+            position: fixed;
+            inset: 0;
+            background-image: 
+                linear-gradient(to right, rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 64px 64px;
+            z-index: -1;
+            mask-image: radial-gradient(circle at 50% 50%, black, transparent 90%);
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1), transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+
+        .text-huge { font-size: clamp(3.5rem, 12vw, 10rem); line-height: 0.85; letter-spacing: -0.05em; }
+        .text-gradient {
+            background: linear-gradient(180deg, #fff 0%, rgba(255,255,255,0.4) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .horizontal-wrapper { 
+            height: 500vh; 
+            position: relative; 
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sticky-container { 
+            position: sticky; 
+            top: 0; 
+            height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            overflow: hidden; 
+        }
+
+        .horizontal-track { 
+            display: flex; 
+            padding-left: 10vw; 
+            padding-right: 20vw;
+            gap: 60px;
+            will-change: transform;
+        }
+
+        .turbo-card {
+            background: rgba(10, 10, 10, 0.4);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(12px);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s ease;
+            min-width: 650px;
+            height: 480px;
+            padding: 3.5rem;
+            border-radius: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .turbo-card:hover {
+            border-color: var(--border-bright);
+            background: rgba(20, 20, 20, 0.6);
+        }
+
+        .mastery-bg {
+            background: radial-gradient(40% 50% at 50% 50%, rgba(255,255,255,0.03) 0%, transparent 100%);
+            position: relative;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .mastery-card {
+            background: linear-gradient(145deg, rgba(20,20,20,0.4) 0%, rgba(5,5,5,0.8) 100%);
+            border: 1px solid var(--border);
+        }
+
+        .btn-primary {
+            background: #fff; color: #000; padding: 10px 24px; border-radius: 100px; font-weight: 600; font-size: 13px;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .btn-primary:hover {
+            background: transparent;
+            color: #fff;
+            border-color: #fff;
+        }
+        
+        .badge-mono {
+            font-family: 'Geist Mono', monospace; font-size: 10px; color: #888;
+            border: 1px solid var(--border); padding: 4px 12px; border-radius: 100px;
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .inner-container-border {
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 1.5rem;
+        }
+
+        @keyframes sound { 0%, 100% { height: 4px; } 50% { height: 16px; } }
+        .sound-bar { animation: sound 1s infinite ease-in-out; }
+
+        a, button { cursor: none; } /* Ensure children don't show pointer */
+    </style>
+</head>
+<body>
+
+    <div id="cursor-shadow"></div>
+    <div id="cursor-dot"></div>
+
+    <div class="grid-overlay"></div>
+
+    <nav>
+        <div class="flex items-center gap-2">
+            <div class="w-5 h-5 bg-white rounded-sm flex items-center justify-center font-black text-black text-[9px] border border-white">SB</div>
+            <span class="font-bold tracking-tight text-sm uppercase">StudyBuddy</span>
+        </div>
+        <div class="hidden md:flex items-center gap-8">
+            <a href="#" class="text-[11px] font-medium text-zinc-400 hover:text-white transition tracking-widest uppercase">Infrastructure</a>
+            <a href="#" class="text-[11px] font-medium text-zinc-400 hover:text-white transition tracking-widest uppercase">Metrics</a>
+            <a href="#" class="text-[11px] font-medium text-zinc-400 hover:text-white transition tracking-widest uppercase">Capabilities</a>
+        </div>
+        <div class="flex items-center gap-2">
+            <button class="btn-primary">START NOW</button>
+        </div>
+    </nav>
+
+    <section class="h-screen flex flex-col justify-center px-6 text-center">
+        <div class="reveal active">
+            <div class="mb-10"><span class="badge-mono">Release v2.0 // Academic Intelligence</span></div>
+            <h1 class="text-huge font-black text-gradient italic mb-10">Study <br/>BUDDY.</h1>
+            <p class="text-zinc-500 text-lg md:text-xl max-w-xl mx-auto mb-10">The high-performance learning engine for students. Scale your knowledge with RAG-AI and peer networks.</p>
+            <button class="btn-primary scale-125 px-8">Create Your Vault</button>
+        </div>
+    </section>
+
+    <div class="horizontal-wrapper" id="horizontalWrapper">
+        <div class="sticky-container">
+            <div class="horizontal-track" id="track">
+                
+                <div class="turbo-card">
+                    <div>
+                        <div class="badge-mono mb-8">System // 01</div>
+                        <h3 class="text-5xl font-bold tracking-tight mb-6 italic text-white">The Vault</h3>
+                        <p class="text-zinc-500 text-lg leading-relaxed max-w-md">Multi-modal ingestion for CHO, PDF, and Markdown. We build your knowledge graph in the background.</p>
+                    </div>
+                    <div class="p-5 inner-container-border font-mono text-[11px] text-zinc-400 space-y-1">
+                        <div class="flex justify-between"><span>> analyzing physics_midterm.pdf</span> <span class="text-white">OK</span></div>
+                        <div class="flex justify-between"><span>> indexing knowledge_graph</span> <span class="text-white">100%</span></div>
+                        <div class="text-zinc-600 italic mt-2 text-right">// sync complete</div>
+                    </div>
+                </div>
+
+                <div class="turbo-card">
+                    <div>
+                        <div class="badge-mono mb-8">System // 02</div>
+                        <h3 class="text-5xl font-bold tracking-tight mb-6 italic text-white">RAG Intelligence</h3>
+                        <p class="text-zinc-500 text-lg leading-relaxed max-w-md">No hallucinations. Every answer is cited directly from your specific lecture materials and textbooks.</p>
+                    </div>
+                    <div class="h-32 inner-container-border flex flex-col justify-center px-10 relative overflow-hidden">
+                        <div class="absolute inset-0 bg-white/[0.01] grid grid-cols-6 h-full border-x border-white/5"></div>
+                        <div class="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden relative z-10 border border-white/10">
+                            <div class="w-3/4 h-full bg-white shadow-[0_0_15px_rgba(255,255,255,0.3)]"></div>
+                        </div>
+                        <div class="flex justify-between mt-4 font-mono text-[9px] text-zinc-500 uppercase tracking-widest relative z-10">
+                            <span>Inference Engine</span>
+                            <span class="text-white">99.4% Confidence</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="turbo-card">
+                    <div>
+                        <div class="badge-mono mb-8">System // 03</div>
+                        <h3 class="text-5xl font-bold tracking-tight mb-6 italic text-white">Peer Sync</h3>
+                        <p class="text-zinc-500 text-lg leading-relaxed max-w-md">Real-time presence indicators. Know when your peers are studying the same module for instant collaboration.</p>
+                    </div>
+                    <div class="flex items-center gap-4 p-4 inner-container-border w-fit">
+                        <div class="flex -space-x-4">
+                            <div class="w-12 h-12 rounded-full border-2 border-zinc-900 bg-zinc-800"></div>
+                            <div class="w-12 h-12 rounded-full border-2 border-zinc-900 bg-zinc-700"></div>
+                            <div class="w-12 h-12 rounded-full border-2 border-zinc-900 bg-white flex items-center justify-center text-black font-bold text-xs">+24</div>
+                        </div>
+                        <span class="text-xs font-mono text-zinc-500 uppercase tracking-tighter">Live in Module 04</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <section class="min-h-screen mastery-bg flex items-center justify-center py-40 px-6">
+        <div class="max-w-7xl w-full">
+            <div class="grid lg:grid-cols-2 gap-20 items-center">
+                <div class="reveal">
+                    <span class="badge-mono mb-6">Analytics // Intelligence</span>
+                    <h2 class="text-7xl font-black tracking-tighter mb-8 italic leading-[0.9]">Metric Driven <br/><span class="text-zinc-600">Mastery.</span></h2>
+                    <p class="text-zinc-400 text-xl leading-relaxed max-w-lg mb-12">StudyBuddy monitors your knowledge gaps in real-time, mapping every session against your specific syllabus.</p>
+                    <div class="flex gap-4 items-center border border-white/10 w-fit px-6 py-3 rounded-full">
+                        <div class="w-3 h-3 rounded-full border border-white/20 flex items-center justify-center">
+                            <div class="w-1 h-1 bg-white rounded-full animate-pulse"></div>
+                        </div>
+                        <span class="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Active Retention Monitoring</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-6 reveal">
+                    <div class="mastery-card p-10 rounded-[2.5rem] col-span-2 flex justify-between items-center">
+                        <div>
+                            <h4 class="text-xs font-mono text-zinc-500 uppercase mb-2">Total Retention</h4>
+                            <div class="text-6xl font-black italic">82.4%</div>
+                        </div>
+                        <div class="w-24 h-24 border border-zinc-800 rounded-full flex items-center justify-center relative">
+                            <div class="absolute inset-0 border-t border-white rounded-full animate-[spin_3s_linear_infinite]"></div>
+                            <span class="text-[10px] font-mono">SYNC</span>
+                        </div>
+                    </div>
+                    <div class="mastery-card p-8 rounded-[2rem]">
+                        <h4 class="text-[10px] font-mono text-zinc-500 uppercase mb-4 tracking-widest">Focus Velocity</h4>
+                        <div class="text-3xl font-bold">2.4h</div>
+                    </div>
+                    <div class="mastery-card p-8 rounded-[2rem]">
+                        <h4 class="text-[10px] font-mono text-zinc-500 uppercase mb-4 tracking-widest">Global Rank</h4>
+                        <div class="text-3xl font-bold">Top 5%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-32 px-6 bg-[#050505] border-b border-white/5">
+        <div class="max-w-7xl mx-auto">
+            <div class="mb-16 reveal flex justify-between items-end border-b border-white/10 pb-8">
+                <div>
+                    <span class="badge-mono mb-4">Utility // Advanced Tools</span>
+                    <h2 class="text-5xl font-bold tracking-tight italic">Engine Capabilities</h2>
+                </div>
+                <div class="hidden md:block text-[10px] font-mono text-zinc-600 uppercase">Architecture Release 2026.4</div>
+            </div>
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="reveal turbo-card !min-w-0 !h-[450px] p-10 group border-white/10 hover:border-white/30">
+                    <div>
+                        <div class="mb-6 flex gap-1 items-end h-8 border-b border-white/5 pb-2">
+                            <div class="w-1 bg-white sound-bar" style="animation-delay: 0.1s"></div>
+                            <div class="w-1 bg-white sound-bar" style="animation-delay: 0.3s"></div>
+                            <div class="w-1 bg-white sound-bar" style="animation-delay: 0.2s"></div>
+                        </div>
+                        <h4 class="text-3xl font-bold mb-4 italic text-white">Audio Recaps</h4>
+                        <p class="text-zinc-400 text-sm leading-relaxed">Convert complex CHO notes into studio-quality AI podcasts for hands-free mastery.</p>
+                    </div>
+                    <div class="bg-white/5 rounded-xl p-4 flex items-center justify-between border border-white/10 text-[10px] font-mono text-zinc-400">
+                        <span>LECTURE_01.MP3</span> <span class="text-white">04:20</span>
+                    </div>
+                </div>
+                <div class="reveal turbo-card !min-w-0 !h-[450px] p-10 border-white/10 hover:border-white/30">
+                    <div>
+                        <div class="mb-6 font-mono text-white text-xl opacity-40 border-b border-white/5 pb-2">$$\int_{a}^{b} f(x) dx$$</div>
+                        <h4 class="text-3xl font-bold mb-4 italic text-white">LaTeX Engine</h4>
+                        <p class="text-zinc-400 text-sm leading-relaxed">Perfect rendering for engineering. Our RAG engine understands symbolic notation natively.</p>
+                    </div>
+                    <div class="font-mono text-[10px] text-zinc-500 bg-white/5 p-4 rounded-xl italic border border-white/5">Ready for MathML...</div>
+                </div>
+                <div class="reveal turbo-card !min-w-0 !h-[450px] p-10 group border-white/10 hover:border-white/30">
+                    <div>
+                        <div class="mb-6 w-10 h-10 border border-white/10 rounded-full flex items-center justify-center group-hover:bg-white transition-all group-hover:border-white">
+                            <div class="w-1.5 h-1.5 bg-white group-hover:bg-black rounded-full"></div>
+                        </div>
+                        <h4 class="text-3xl font-bold mb-4 italic text-white">Focus API</h4>
+                        <p class="text-zinc-400 text-sm leading-relaxed">Hardware integration. Connect focus lamps directly to your study state.</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <div class="px-3 py-1 bg-white/5 border border-white/10 rounded-md text-[9px] font-mono tracking-widest uppercase text-zinc-500">HUE_SYNC</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="h-screen flex flex-col items-center justify-center text-center px-6">
+        <div class="reveal">
+            <h2 class="text-huge font-black italic mb-12 text-gradient">Deploy <br>Mastery.</h2>
+            <button class="btn-primary scale-150 px-10">Join the Waitlist</button>
+        </div>
+    </section>
+
+    <footer class="bg-white text-black py-24 px-6 border-t-[12px] border-zinc-100">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="font-black italic tracking-tighter mb-20" style="font-size: clamp(4rem, 15vw, 12rem); line-height: 0.85; letter-spacing: -0.05em;">
+                STUDYBUDDY.
+            </h2>
+            
+            <div class="grid md:grid-cols-4 gap-12 mb-16 pb-16 border-b border-black/5">
+                <div>
+                    <h5 class="font-mono text-[10px] uppercase tracking-widest mb-6 text-zinc-400">Product</h5>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="#" class="hover:opacity-50 transition">Features</a></li>
+                        <li><a href="#" class="hover:opacity-50 transition">Pricing</a></li>
+                        <li><a href="#" class="hover:opacity-50 transition">API</a></li>
+                        <li><a href="#" class="hover:opacity-50 transition">Roadmap</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h5 class="font-mono text-[10px] uppercase tracking-widest mb-6 text-zinc-400">Company</h5>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="#" class="hover:opacity-50 transition">About</a></li>
+                        <li><a href="#" class="hover:opacity-50 transition">Careers</a></li>
+                        <li><a href="#" class="hover:opacity-50 transition">Blog</a></li>
+                        <li><a href="#" class="hover:opacity-50 transition">Contact</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h5 class="font-mono text-[10px] uppercase tracking-widest mb-6 text-zinc-400">Resources</h5>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="#" class="hover:opacity-50 transition">Documentation</a></li>
+                        <li><a href="#" class="hover:opacity-50 transition">Help Center</a></li>
+                        <li><a href="#" class="hover:opacity-50 transition">Community</a></li>
+                        <li><a href="#" class="hover:opacity-50 transition">Status</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h5 class="font-mono text-[10px] uppercase tracking-widest mb-6 text-zinc-400">Legal</h5>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="#" class="hover:opacity-50 transition">Privacy</a></li>
+                        <li><a href="#" class="hover:opacity-50 transition">Terms</a></li>
+                        <li><a href="#" class="hover:opacity-50 transition">Security</a></li>
+                        <li><a href="#" class="hover:opacity-50 transition">Compliance</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <p class="text-[10px] font-mono text-zinc-400 tracking-[0.2em]">© 2026 STUDYBUDDY GLOBAL SYSTEMS</p>
+                <div class="flex gap-4">
+                    <a href="#" class="w-9 h-9 border border-black/5 rounded-full flex items-center justify-center hover:bg-black hover:text-white transition text-[10px] font-bold">TW</a>
+                    <a href="#" class="w-9 h-9 border border-black/5 rounded-full flex items-center justify-center hover:bg-black hover:text-white transition text-[10px] font-bold">LI</a>
+                    <a href="#" class="w-9 h-9 border border-black/5 rounded-full flex items-center justify-center hover:bg-black hover:text-white transition text-[10px] font-bold">GH</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Cursor Shadow Logic
+        const shadow = document.getElementById('cursor-shadow');
+        const dot = document.getElementById('cursor-dot');
+
+        document.addEventListener('mousemove', (e) => {
+            shadow.style.left = e.clientX + 'px';
+            shadow.style.top = e.clientY + 'px';
+            dot.style.left = e.clientX + 'px';
+            dot.style.top = e.clientY + 'px';
+        });
+
+        // Effect when hovering interactive elements
+        document.querySelectorAll('a, button, .turbo-card').forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                shadow.style.width = '600px';
+                shadow.style.height = '600px';
+                shadow.style.background = 'radial-gradient(circle, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0) 70%)';
+            });
+            el.addEventListener('mouseleave', () => {
+                shadow.style.width = '400px';
+                shadow.style.height = '400px';
+                shadow.style.background = 'radial-gradient(circle, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0) 70%)';
+            });
+        });
+
+        // Animations & Scroll
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('active'); });
+        }, { threshold: 0.15 });
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+        const wrapper = document.getElementById('horizontalWrapper');
+        const track = document.getElementById('track');
+
+        window.addEventListener('scroll', () => {
+            const rect = wrapper.getBoundingClientRect();
+            if (rect.top <= 0 && rect.bottom >= window.innerHeight) {
+                const scrollProgress = -rect.top / (rect.height - window.innerHeight);
+                const maxScroll = track.scrollWidth - window.innerWidth + (window.innerWidth * 0.1); 
+                track.style.transform = `translateX(-${scrollProgress * maxScroll}px)`;
+            }
+        });
+
+        window.onload = () => document.querySelector('.reveal').classList.add('active');
+    </script>
+</body>
+</html>

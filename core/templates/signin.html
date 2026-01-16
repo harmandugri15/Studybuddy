@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Join StudyBuddy — Access your Vault</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #000000;
+            --zinc-950: #09090b;
+            --zinc-900: #18181b;
+            --zinc-800: #27272a;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: #fff;
+            font-family: 'Geist', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            overflow: hidden;
+        }
+
+        .auth-grid {
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(circle at 2px 2px, rgba(255,255,255,0.03) 1px, transparent 0);
+            background-size: 32px 32px;
+            z-index: -1;
+        }
+
+        .auth-card {
+            background: linear-gradient(180deg, #0c0c0e 0%, #050505 100%);
+            border: 1px solid var(--zinc-900);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        input {
+            background: #000 !important;
+            border: 1px solid var(--zinc-800) !important;
+            color: white !important;
+            transition: all 0.2s ease;
+        }
+
+        input:focus {
+            border-color: #52525b !important;
+            outline: none;
+        }
+
+        .btn-google {
+            background: #fff;
+            color: #000;
+            transition: opacity 0.2s ease;
+        }
+
+        .btn-google:hover {
+            opacity: 0.9;
+        }
+
+        .btn-outline {
+            border: 1px solid var(--zinc-800);
+            background: transparent;
+            color: #fff;
+            transition: background 0.2s ease;
+        }
+
+        .btn-outline:hover {
+            background: var(--zinc-900);
+        }
+
+        /* Essential toggle fix */
+        .form-hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-6">
+
+    <div class="auth-grid"></div>
+
+    <div class="w-full max-w-[400px] relative">
+        
+        <div class="flex flex-col items-center mb-10">
+            <a href="index.html" class="flex items-center gap-2 mb-4 group">
+                <div class="w-8 h-8 bg-white rounded flex items-center justify-center transition-transform group-hover:rotate-12">
+                    <div class="w-4 h-[2px] bg-black"></div>
+                </div>
+            </a>
+            <h1 id="auth-title" class="text-2xl font-bold tracking-tight">Welcome back</h1>
+            <p id="auth-subtitle" class="text-zinc-500 text-sm mt-2 text-center">Enter your credentials to access your vault</p>
+        </div>
+
+        <div class="auth-card rounded-2xl p-8">
+            
+            <div id="login-form">
+                <form method="POST" class="space-y-4">
+                    {% csrf_token %} <button type="button" class="btn-google w-full py-2.5 rounded-md font-bold text-sm flex items-center justify-center gap-3">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24">
+                            <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                            <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                        Continue with Google
+                    </button>
+
+                    <div class="relative py-4">
+                        <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-zinc-900"></div></div>
+                        <div class="relative flex justify-center text-[10px] uppercase font-bold tracking-widest text-zinc-600">
+                            <span class="bg-[#0c0c0e] px-2">Or credentials</span>
+                        </div>
+                    </div>
+
+                    {% if form.errors %}
+                    <div class="text-red-500 text-xs text-center font-bold">
+                        Invalid username or password.
+                    </div>
+                    {% endif %}
+
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-bold text-zinc-500 uppercase tracking-wider">Username</label>
+                        <input type="text" name="username" placeholder="admin" class="w-full px-4 py-2.5 rounded-md text-sm">
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <div class="flex justify-between">
+                            <label class="text-[11px] font-bold text-zinc-500 uppercase tracking-wider">Password</label>
+                            <a href="#" class="text-[11px] text-zinc-600 hover:text-white transition">Forgot?</a>
+                        </div>
+                        <input type="password" name="password" placeholder="••••••••" class="w-full px-4 py-2.5 rounded-md text-sm">
+                    </div>
+
+                    <button type="submit" class="btn-outline w-full py-2.5 rounded-md font-bold text-sm mt-4 hover:bg-white hover:text-black transition-colors">
+                        Sign in
+                    </button>
+                </form>
+            </div>
+
+            <div id="signup-form" class="form-hidden">
+                <div class="space-y-4">
+                    <button class="btn-google w-full py-2.5 rounded-md font-bold text-sm flex items-center justify-center gap-3">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24">
+                            <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                            <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                        Sign up with Google
+                    </button>
+
+                    <div class="relative py-2">
+                        <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-zinc-900"></div></div>
+                        <div class="relative flex justify-center text-[10px] uppercase font-bold tracking-widest text-zinc-600">
+                            <span class="bg-[#0c0c0e] px-2">Or credentials</span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-1.5">
+                            <label class="text-[11px] font-bold text-zinc-500 uppercase tracking-wider">First Name</label>
+                            <input type="text" placeholder="John" class="w-full px-4 py-2.5 rounded-md text-sm">
+                        </div>
+                        <div class="space-y-1.5">
+                            <label class="text-[11px] font-bold text-zinc-500 uppercase tracking-wider">Last Name</label>
+                            <input type="text" placeholder="Doe" class="w-full px-4 py-2.5 rounded-md text-sm">
+                        </div>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-bold text-zinc-500 uppercase tracking-wider">Email</label>
+                        <input type="email" placeholder="name@example.com" class="w-full px-4 py-2.5 rounded-md text-sm">
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-bold text-zinc-500 uppercase tracking-wider">Password</label>
+                        <input type="password" placeholder="••••••••" class="w-full px-4 py-2.5 rounded-md text-sm">
+                    </div>
+
+                    <button class="btn-google w-full py-2.5 rounded-md font-bold text-sm mt-2">
+                        Create account
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <p id="toggle-text" class="text-center text-sm text-zinc-500 mt-8">
+            Don't have an account? 
+            <button onclick="toggleAuth()" class="text-white font-semibold hover:underline">Sign up</button>
+        </p>
+
+    </div>
+
+    <script>
+        function toggleAuth() {
+            const loginForm = document.getElementById('login-form');
+            const signupForm = document.getElementById('signup-form');
+            const title = document.getElementById('auth-title');
+            const subtitle = document.getElementById('auth-subtitle');
+            const toggleText = document.getElementById('toggle-text');
+
+            if (loginForm.classList.contains('form-hidden')) {
+                // Show Login
+                loginForm.classList.remove('form-hidden');
+                signupForm.classList.add('form-hidden');
+                title.innerText = "Welcome back";
+                subtitle.innerText = "Enter your credentials to access your vault";
+                toggleText.innerHTML = `Don't have an account? <button onclick="toggleAuth()" class="text-white font-semibold hover:underline">Sign up</button>`;
+            } else {
+                // Show Signup
+                loginForm.classList.add('form-hidden');
+                signupForm.classList.remove('form-hidden');
+                title.innerText = "Create an account";
+                subtitle.innerText = "Join the next generation of learners";
+                toggleText.innerHTML = `Already have an account? <button onclick="toggleAuth()" class="text-white font-semibold hover:underline">Sign in</button>`;
+            }
+        }
+    </script>
+</body>
+</html>

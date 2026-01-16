@@ -15,6 +15,10 @@ class Exam(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     subject = models.CharField(max_length=200)
     date = models.DateTimeField()
+    # NEW: Distinguish between manual missions and bulk datesheet imports
+    is_datesheet_entry = models.BooleanField(default=False)
+    # NEW: Store extra info like "Morning/Evening" or "3 SEM"
+    details = models.CharField(max_length=200, blank=True, null=True)
 
     def __str__(self):
         return f"{self.subject} - {self.date}"
@@ -27,11 +31,9 @@ class Exam(models.Model):
 
 class Topic(models.Model):
     exam = models.ForeignKey(Exam, related_name='topics', on_delete=models.CASCADE)
-    # Changed to TextField to allow long syllabus descriptions
     name = models.TextField() 
     is_completed = models.BooleanField(default=False)
     is_cho = models.BooleanField(default=False)
-    # New: Links the topic back to the specific CHO file for grouping
     source_note = models.ForeignKey(Note, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
@@ -46,3 +48,22 @@ class Profile(models.Model):
 
     def __str__(self):
         return self.user.username
+    
+    
+# core/models.py
+
+# ... (Note and Exam models remain unchanged) ...
+
+class Topic(models.Model):
+    exam = models.ForeignKey(Exam, related_name='topics', on_delete=models.CASCADE)
+    name = models.TextField() 
+    is_completed = models.BooleanField(default=False)
+    # NEW FIELD BELOW:
+    completed_at = models.DateTimeField(null=True, blank=True) 
+    is_cho = models.BooleanField(default=False)
+    source_note = models.ForeignKey(Note, on_delete=models.CASCADE, null=True, blank=True)
+
+    def __str__(self):
+        return self.name[:50]
+
+# ... (Profile model remains unchanged) ...

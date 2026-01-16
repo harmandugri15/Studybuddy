@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vault // Mission Objectives</title>
+    <title>Vault // Mission Protocols</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100;400;700;900&family=Geist+Mono&display=swap" rel="stylesheet">
     <style>
@@ -14,26 +14,30 @@
         .nav-item { width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 18px; margin-bottom: 24px; transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1); color: rgba(255,255,255,0.3); }
         .nav-item:hover, .nav-item.active { background: white; color: black; box-shadow: 0 0 30px rgba(255,255,255,0.15); transform: scale(1.15); }
         .main-container { margin-left: 140px; height: 100vh; overflow-y: auto; padding: 40px 60px 100px 20px; }
+        
         .card-vault { background: linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%); border: 1px solid var(--border); border-radius: 24px; transition: all 0.3s ease; position: relative; overflow: hidden; }
+        .card-vault:hover { border-color: rgba(255,255,255,0.3); transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+        
         .mono-tag { font-family: 'Geist Mono'; font-size: 10px; text-transform: uppercase; letter-spacing: 0.2em; color: rgba(255,255,255,0.4); }
         .cyber-checkbox { appearance: none; width: 20px; height: 20px; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; cursor: pointer; position: relative; flex-shrink: 0; }
         .cyber-checkbox:checked { background: #fff; border-color: #fff; box-shadow: 0 0 10px #fff; }
         .cyber-checkbox:checked::after { content: '✓'; position: absolute; color: black; font-size: 14px; font-weight: bold; top: 50%; left: 50%; transform: translate(-50%, -50%); }
         .rename-input { background: transparent; border: none; border-bottom: 1px solid white; color: white; width: 100%; outline: none; font-size: 14px; padding: 4px 0; }
-        
-        /* Exam Title Edit */
-        .exam-title-input {
-            background: transparent; border: none; border-bottom: 2px solid white; 
-            color: white; width: 100%; outline: none; 
-            font-size: 2.25rem; font-weight: 700; text-transform: uppercase;
-        }
-
-        /* Collapse Styles */
+        .exam-title-input { background: transparent; border: none; border-bottom: 2px solid white; color: white; width: 100%; outline: none; font-size: 2.25rem; font-weight: 700; text-transform: uppercase; }
         details > summary { list-style: none; cursor: pointer; outline: none; }
         details > summary::-webkit-details-marker { display: none; }
         details[open] > summary svg { transform: rotate(180deg); }
         
-        #c-ring, #c-dot { pointer-events: none; position: fixed; border-radius: 50%; z-index: 1000; transform: translate(-50%, -50%); }
+        /* Modal Animation */
+        .modal-overlay { opacity: 0; pointer-events: none; transition: all 0.3s; }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-content { transform: translateY(20px) scale(0.95); transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1); }
+        .modal-overlay.active .modal-content { transform: translateY(0) scale(1); }
+
+        /* Circular Progress */
+        .progress-ring__circle { transition: stroke-dashoffset 0.5s ease-in-out; transform: rotate(-90deg); transform-origin: 50% 50%; }
+
+        #c-ring, #c-dot { pointer-events: none; position: fixed; border-radius: 50%; z-index: 10000; transform: translate(-50%, -50%); }
         #c-ring { width: 40px; height: 40px; border: 1px solid rgba(255,255,255,0.2); transition: 0.1s; }
         #c-dot { width: 4px; height: 4px; background: #fff; box-shadow: 0 0 10px #fff; }
         .msg-toast { animation: slideIn 0.5s cubic-bezier(0.19, 1, 0.22, 1); }
@@ -46,16 +50,17 @@
 
     <nav class="sidebar">
         <a href="{% url 'home' %}" class="w-12 h-12 bg-white rounded-2xl mb-16 flex items-center justify-center text-black font-black text-xl italic">V</a>
-        <a href="{% url 'dashboard' %}" class="nav-item"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg></a>
+        <a href="{% url 'dashboard' %}" class="nav-item"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg></a>
         <a href="{% url 'notes_hub' %}" class="nav-item"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg></a>
         <a href="#" class="nav-item active"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg></a>
+        <a href="{% url 'datesheet_hub' %}" class="nav-item"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></a>
     </nav>
 
     <main class="main-container">
         {% if messages %}
-        <div class="mb-8 flex flex-col gap-2">
+        <div class="fixed top-10 right-10 z-50 flex flex-col gap-2">
             {% for message in messages %}
-            <div class="msg-toast bg-white/10 border border-white/20 text-white px-6 py-4 rounded-xl flex items-center gap-4 shadow-[0_0_30px_rgba(255,255,255,0.1)]">
+            <div class="msg-toast bg-zinc-900 border border-white/20 text-white px-6 py-4 rounded-xl flex items-center gap-4 shadow-[0_0_30px_rgba(255,255,255,0.1)]">
                 <div class="w-8 h-8 bg-white text-black rounded-full flex items-center justify-center font-bold">!</div>
                 <p class="text-sm font-mono uppercase tracking-wider">{{ message }}</p>
             </div>
@@ -65,97 +70,168 @@
 
         <header class="flex justify-between items-end mb-16">
             <div>
-                <span class="mono-tag opacity-40">System // Checklists</span>
-                <h1 class="text-6xl font-black italic tracking-tighter mt-2">Mission <span class="text-white/20">Protocol.</span></h1>
+                <span class="mono-tag opacity-40">System // Protocols</span>
+                <h1 class="text-6xl font-black italic tracking-tighter mt-2">Mission <span class="text-white/20">Control.</span></h1>
             </div>
         </header>
 
         {% if exams %}
-            <div class="space-y-12">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                 {% for exam in exams %}
-                <div class="card-vault p-10 relative overflow-visible group">
-                    <div class="absolute top-0 left-0 h-1 bg-gradient-to-r from-emerald-500 to-transparent transition-all duration-1000" style="width: {{ exam.progress }}%"></div>
+                <div onclick="openMission('{{ exam.id }}')" class="card-vault aspect-[3/4] p-8 flex flex-col justify-between group cursor-pointer hover:bg-white/5">
+                    
+                    <div>
+                        <span class="mono-tag text-emerald-400">Active Protocol</span>
+                        <h2 class="text-3xl font-bold mt-2 uppercase leading-none break-words">{{ exam.subject }}</h2>
+                    </div>
 
-                    <div class="flex justify-between items-start mb-12">
-                        <div class="flex-1 mr-8">
-                            <span class="mono-tag text-emerald-400">Targeting</span>
-                            
-                            <div onclick="enableExamRename('{{ exam.id }}')" class="cursor-pointer group/title flex items-center gap-4">
-                                <div id="exam-view-{{ exam.id }}" class="flex items-center gap-3">
-                                    <h2 class="text-4xl font-bold mt-2 uppercase">{{ exam.subject }}</h2>
-                                    <svg class="w-4 h-4 opacity-0 group-hover/title:opacity-50 mt-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
-                                </div>
-                                
-                                <form id="exam-rename-{{ exam.id }}" action="{% url 'rename_exam' exam.id %}" method="post" class="hidden w-full max-w-md mt-2">
-                                    {% csrf_token %}
-                                    <input type="text" name="new_subject" value="{{ exam.subject }}" class="exam-title-input" onblur="this.form.submit()" onkeydown="if(event.key === 'Enter') this.form.submit()">
-                                </form>
+                    <div class="flex items-center justify-center py-8">
+                        <div class="relative w-40 h-40">
+                            <svg class="w-full h-full transform -rotate-90">
+                                <circle cx="80" cy="80" r="70" stroke="rgba(255,255,255,0.1)" stroke-width="8" fill="transparent" />
+                                <circle class="progress-ring__circle"
+                                        stroke="white" 
+                                        stroke-width="8" 
+                                        fill="transparent"
+                                        r="70" cx="80" cy="80"
+                                        stroke-dasharray="439.8"
+                                        stroke-dashoffset="calc(439.8 - (439.8 * {{ exam.progress }}) / 100)"
+                                />
+                            </svg>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                <span class="text-4xl font-black italic">{{ exam.progress }}%</span>
+                                <span class="text-[10px] font-mono opacity-50">COMPLETED</span>
                             </div>
-
-                            <p class="text-sm font-mono opacity-40 mt-1">Scheduled for {{ exam.date|date:"F j, Y" }}</p>
-                        </div>
-                        <div class="text-right flex flex-col items-end gap-2">
-                            <span class="text-5xl font-black italic opacity-20 group-hover:opacity-100 transition-opacity">{{ exam.progress }}%</span>
-                            <a href="{% url 'delete_mission' exam.id %}" onclick="return confirm('Abort mission?')" class="text-[9px] font-bold text-red-500 border border-red-500/20 px-3 py-1 rounded hover:bg-red-500 hover:text-white uppercase transition">Abort</a>
                         </div>
                     </div>
 
-                    {% regroup exam.topics.all by source_note as topic_groups %}
+                    <div class="border-t border-white/10 pt-4 flex justify-between items-center">
+                        <div>
+                            <p class="text-xs font-mono opacity-50">EXECUTION DATE</p>
+                            <p class="text-sm font-bold mt-1">{{ exam.date|date:"M d, Y" }}</p>
+                        </div>
+                        <div class="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-colors">
+                            ↗
+                        </div>
+                    </div>
+                </div>
 
-                    <div class="space-y-6">
-                        {% for group in topic_groups %}
-                        <details class="group/file" {% if forloop.first %}open{% endif %}>
-                            <summary class="flex items-center gap-4 cursor-pointer mb-4 p-2 hover:bg-white/5 rounded-lg transition">
-                                <div class="w-6 h-6 border border-white/20 rounded flex items-center justify-center transition-transform group-open/file:rotate-90">
-                                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                                </div>
-                                <span class="mono-tag text-white font-bold bg-white/10 px-3 py-1 rounded">
-                                    {% if group.grouper %}{{ group.grouper.title }}{% else %}MANUAL OBJECTIVES{% endif %}
-                                </span>
-                                <div class="h-px flex-1 bg-white/10"></div>
-                            </summary>
+                <div id="modal-{{ exam.id }}" class="modal-overlay fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md">
+                    
+                    <div class="modal-content w-full max-w-4xl h-[85vh] bg-[#0c0c0e] border border-white/10 rounded-3xl p-10 flex flex-col shadow-2xl relative" onclick="event.stopPropagation()">
+                        
+                        <button onclick="closeMission('{{ exam.id }}', event)" class="absolute top-6 right-6 w-10 h-10 rounded-full border border-white/10 hover:bg-white hover:text-black flex items-center justify-center transition z-20">✕</button>
 
-                            <div class="pl-10 space-y-2">
-                                {% for topic in group.list %}
-                                <div class="flex items-start gap-4 py-2 border-b border-white/5 last:border-0 hover:bg-white/5 px-4 rounded transition group/item">
-                                    
-                                    <form method="post" class="mt-1">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="toggle_topic" value="true">
-                                        <input type="hidden" name="topic_id" value="{{ topic.id }}">
-                                        <button type="submit" class="cyber-checkbox {% if topic.is_completed %}bg-white border-white{% endif %}"></button>
-                                    </form>
-
-                                    <div class="flex-1" onclick="enableTopicRename('{{ topic.id }}')">
-                                        <div id="topic-view-{{ topic.id }}" class="cursor-text">
-                                            <p class="text-sm font-medium leading-relaxed {% if topic.is_completed %}line-through opacity-30{% endif %}">
-                                                {{ topic.name }}
-                                            </p>
-                                        </div>
-                                        
-                                        <form id="topic-rename-{{ topic.id }}" action="{% url 'rename_topic' topic.id %}" method="post" class="hidden">
-                                            {% csrf_token %}
-                                            <input type="text" name="new_name" value="{{ topic.name }}" class="rename-input" onblur="this.form.submit()" onkeydown="if(event.key === 'Enter') this.form.submit()">
-                                        </form>
+                        <div class="flex justify-between items-start mb-8 border-b border-white/10 pb-6">
+                            <div class="flex-1 mr-8">
+                                <span class="mono-tag text-emerald-400">Targeting Parameters</span>
+                                
+                                <div onclick="enableExamRename('{{ exam.id }}')" class="cursor-pointer group/title flex items-center gap-4">
+                                    <div id="exam-view-{{ exam.id }}" class="flex items-center gap-3">
+                                        <h2 class="text-5xl font-bold mt-2 uppercase">{{ exam.subject }}</h2>
+                                        <svg class="w-5 h-5 opacity-0 group-hover/title:opacity-50 mt-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                                     </div>
+                                    <form id="exam-rename-{{ exam.id }}" action="{% url 'rename_exam' exam.id %}" method="post" class="hidden w-full max-w-md mt-2">
+                                        {% csrf_token %}
+                                        <input type="text" name="new_subject" value="{{ exam.subject }}" class="exam-title-input" onblur="this.form.submit()" onkeydown="if(event.key === 'Enter') this.form.submit()">
+                                    </form>
                                 </div>
-                                {% endfor %}
+                                <p class="text-sm font-mono opacity-40 mt-2">{{ exam.date|timeuntil }} remaining // {{ exam.progress }}% Ready</p>
                             </div>
-                        </details>
-                        {% endfor %}
+                            
+                            <div class="flex items-center mt-2">
+                                <a href="{% url 'delete_mission' exam.id %}" onclick="return confirm('WARNING: Abort Mission? This cannot be undone.')" class="text-[10px] font-bold text-red-500 border border-red-500/20 px-4 py-2 rounded-full hover:bg-red-500 hover:text-white uppercase transition tracking-wider">
+                                    Abort Protocol
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="flex-1 overflow-y-auto custom-scrollbar pr-4 space-y-6">
+                            {% regroup exam.topics.all by source_note as topic_groups %}
+                            
+                            {% for group in topic_groups %}
+                            <details class="group/file" {% if forloop.first %}open{% endif %}>
+                                <summary class="flex items-center gap-4 cursor-pointer mb-4 p-3 hover:bg-white/5 rounded-xl transition border border-transparent hover:border-white/10">
+                                    <div class="w-6 h-6 bg-white/10 rounded flex items-center justify-center transition-transform group-open/file:rotate-90 text-[10px]">▶</div>
+                                    <span class="mono-tag text-white font-bold text-xs">
+                                        {% if group.grouper %}{{ group.grouper.title }}{% else %}MANUAL OBJECTIVES{% endif %}
+                                    </span>
+                                    <div class="h-px flex-1 bg-white/10"></div>
+                                    <span class="mono-tag opacity-50">{{ group.list|length }} NODES</span>
+                                </summary>
+
+                                <div class="pl-4 space-y-1">
+                                    {% for topic in group.list %}
+                                    <div class="flex items-start gap-4 py-3 border-b border-white/5 last:border-0 hover:bg-white/5 px-4 rounded-lg transition group/item">
+                                        <form method="post" class="mt-0.5">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="toggle_topic" value="true">
+                                            <input type="hidden" name="topic_id" value="{{ topic.id }}">
+                                            <button type="submit" class="cyber-checkbox {% if topic.is_completed %}bg-white border-white{% endif %}"></button>
+                                        </form>
+
+                                        <div class="flex-1" onclick="enableTopicRename('{{ topic.id }}')">
+                                            <div id="topic-view-{{ topic.id }}" class="cursor-text">
+                                                <p class="text-sm font-medium leading-relaxed {% if topic.is_completed %}line-through opacity-30{% endif %}">
+                                                    {{ topic.name }}
+                                                </p>
+                                            </div>
+                                            <form id="topic-rename-{{ topic.id }}" action="{% url 'rename_topic' topic.id %}" method="post" class="hidden">
+                                                {% csrf_token %}
+                                                <input type="text" name="new_name" value="{{ topic.name }}" class="rename-input" onblur="this.form.submit()" onkeydown="if(event.key === 'Enter') this.form.submit()">
+                                            </form>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </details>
+                            {% endfor %}
+                            
+                            {% if not exam.topics.all %}
+                            <div class="flex flex-col items-center justify-center py-20 opacity-30 border border-dashed border-white/10 rounded-2xl">
+                                <p class="mono-tag">No data nodes ingested.</p>
+                                <p class="text-xs mt-2">Upload CHO files in Vault to populate.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+
                     </div>
                 </div>
                 {% endfor %}
             </div>
+
         {% else %}
-            <div class="flex flex-col items-center justify-center h-[50vh] text-center opacity-50">
+            <div class="flex flex-col items-center justify-center h-[60vh] text-center opacity-50">
+                <div class="w-20 h-20 border border-dashed border-white/30 rounded-full flex items-center justify-center mb-6">
+                    <svg class="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                </div>
                 <h2 class="text-2xl font-bold">Protocol Empty</h2>
-                <p class="mono-tag mt-2">Upload CHO files to generate tasks.</p>
+                <p class="mono-tag mt-2">Initialize a mission in Dashboard to begin.</p>
             </div>
         {% endif %}
     </main>
 
     <script>
+        function openMission(id) {
+            document.getElementById(`modal-${id}`).classList.add('active');
+            document.body.style.overflow = 'hidden'; 
+        }
+
+        function closeMission(id, event) {
+            if(event) event.stopPropagation();
+            document.getElementById(`modal-${id}`).classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+            });
+        });
+
         function enableTopicRename(id) {
             document.getElementById(`topic-view-${id}`).classList.add('hidden');
             const form = document.getElementById(`topic-rename-${id}`);

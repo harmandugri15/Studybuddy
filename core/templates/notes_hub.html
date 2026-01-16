@@ -1,63 +1,237 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vault // Knowledge Base</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100;400;700;900&family=Geist+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100;400;700;900&family=Geist+Mono&display=swap"
+        rel="stylesheet">
     <style>
-        :root { --bg: #030303; --zinc-900: #09090b; --border: rgba(255, 255, 255, 0.08); }
-        html, body { height: 100%; margin: 0; background-color: var(--bg); color: #fff; font-family: 'Geist', sans-serif; overflow: hidden; cursor: none; }
-        .bg-mesh { position: fixed; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px); background-size: 60px 60px; mask-image: radial-gradient(circle at center, black, transparent 90%); z-index: -1; }
-        .sidebar { width: 100px; height: calc(100vh - 40px); position: fixed; top: 20px; left: 20px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border); border-radius: 30px; backdrop-filter: blur(20px); display: flex; flex-direction: column; align-items: center; padding: 40px 0; z-index: 100; }
-        .nav-item { width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 18px; margin-bottom: 24px; transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1); color: rgba(255,255,255,0.3); }
-        .nav-item:hover, .nav-item.active { background: white; color: black; box-shadow: 0 0 30px rgba(255,255,255,0.15); transform: scale(1.15); }
-        .main-container { margin-left: 140px; height: 100vh; overflow-y: auto; padding: 40px 60px 100px 20px; }
-        .card-vault { background: linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%); border: 1px solid var(--border); border-radius: 24px; transition: all 0.3s ease; position: relative; overflow: visible; }
-        .mono-tag { font-family: 'Geist Mono'; font-size: 10px; text-transform: uppercase; letter-spacing: 0.2em; color: rgba(255,255,255,0.4); }
-        .options-menu { display: none; position: absolute; top: 40px; right: 10px; background: #000; border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; z-index: 50; overflow: hidden; min-width: 120px; }
-        .options-menu button, .options-menu a { display: block; width: 100%; padding: 10px 16px; text-align: left; font-size: 12px; color: #fff; transition: bg 0.2s; }
-        .options-menu button:hover, .options-menu a:hover { background: rgba(255,255,255,0.1); }
-        .rename-input { background: transparent; border: none; border-bottom: 1px solid white; color: white; font-weight: bold; font-size: 1.25rem; width: 100%; outline: none; }
-        #c-ring, #c-dot { pointer-events: none; position: fixed; border-radius: 50%; z-index: 1000; transform: translate(-50%, -50%); }
-        #c-ring { width: 40px; height: 40px; border: 1px solid rgba(255,255,255,0.2); transition: 0.1s; }
-        #c-dot { width: 4px; height: 4px; background: #fff; box-shadow: 0 0 10px #fff; }
-        @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .msg-toast { animation: slideIn 0.5s cubic-bezier(0.19, 1, 0.22, 1); }
+        :root {
+            --bg: #030303;
+            --zinc-900: #09090b;
+            --border: rgba(255, 255, 255, 0.08);
+        }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            background-color: var(--bg);
+            color: #fff;
+            font-family: 'Geist', sans-serif;
+            overflow: hidden;
+            cursor: none;
+        }
+
+        .bg-mesh {
+            position: fixed;
+            inset: 0;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 60px 60px;
+            mask-image: radial-gradient(circle at center, black, transparent 90%);
+            z-index: -1;
+        }
+
+        .sidebar {
+            width: 100px;
+            height: calc(100vh - 40px);
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            backdrop-filter: blur(20px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 0;
+            z-index: 100;
+        }
+
+        .nav-item {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 18px;
+            margin-bottom: 24px;
+            transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            background: white;
+            color: black;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.15);
+            transform: scale(1.15);
+        }
+
+        .main-container {
+            margin-left: 140px;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 40px 60px 100px 20px;
+        }
+
+        .card-vault {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: visible;
+        }
+
+        .mono-tag {
+            font-family: 'Geist Mono';
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .options-menu {
+            display: none;
+            position: absolute;
+            top: 40px;
+            right: 10px;
+            background: #000;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            z-index: 50;
+            overflow: hidden;
+            min-width: 120px;
+        }
+
+        .options-menu button,
+        .options-menu a {
+            display: block;
+            width: 100%;
+            padding: 10px 16px;
+            text-align: left;
+            font-size: 12px;
+            color: #fff;
+            transition: bg 0.2s;
+        }
+
+        .options-menu button:hover,
+        .options-menu a:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .rename-input {
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid white;
+            color: white;
+            font-weight: bold;
+            font-size: 1.25rem;
+            width: 100%;
+            outline: none;
+        }
+
+        #c-ring,
+        #c-dot {
+            pointer-events: none;
+            position: fixed;
+            border-radius: 50%;
+            z-index: 1000;
+            transform: translate(-50%, -50%);
+        }
+
+        #c-ring {
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: 0.1s;
+        }
+
+        #c-dot {
+            width: 4px;
+            height: 4px;
+            background: #fff;
+            box-shadow: 0 0 10px #fff;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .msg-toast {
+            animation: slideIn 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+        }
     </style>
 </head>
+
 <body>
-    <div id="c-ring"></div><div id="c-dot"></div>
+    <div id="c-ring"></div>
+    <div id="c-dot"></div>
     <div class="bg-mesh"></div>
 
-    <div id="loading-overlay" class="fixed inset-0 bg-black/90 z-[9999] hidden flex-col items-center justify-center backdrop-blur-sm">
+    <div id="loading-overlay"
+        class="fixed inset-0 bg-black/90 z-[9999] hidden flex-col items-center justify-center backdrop-blur-sm">
         <div class="relative w-24 h-24 mb-8">
             <div class="absolute inset-0 border-t-2 border-white rounded-full animate-spin"></div>
-            <div class="absolute inset-4 border-t-2 border-white/50 rounded-full animate-[spin_1s_linear_infinite_reverse]"></div>
+            <div
+                class="absolute inset-4 border-t-2 border-white/50 rounded-full animate-[spin_1s_linear_infinite_reverse]">
+            </div>
         </div>
         <h2 class="text-3xl font-black italic tracking-tighter animate-pulse">Analyzing Neural Data...</h2>
         <p class="mono-tag mt-4">Extracting Syllabus Protocol</p>
     </div>
 
     <nav class="sidebar">
-        <a href="{% url 'home' %}" class="w-12 h-12 bg-white rounded-2xl mb-16 flex items-center justify-center text-black font-black text-xl italic shadow-[0_0_20px_rgba(255,255,255,0.3)]">V</a>
+        <a href="{% url 'home' %}"
+            class="w-12 h-12 bg-white rounded-2xl mb-16 flex items-center justify-center text-black font-black text-xl italic shadow-[0_0_20px_rgba(255,255,255,0.3)]">V</a>
+
         <a href="{% url 'dashboard' %}" class="nav-item">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+            </svg>
         </a>
-        <a href="{% url 'notes_hub' %}" class="nav-item active">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+
+        <a href="#" class="nav-item active">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
         </a>
+
         <a href="{% url 'topics_hub' %}" class="nav-item">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg>
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+            </svg>
+        </a>
+
+        <a href="{% url 'datesheet_hub' %}" class="nav-item">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
         </a>
     </nav>
-
     <main class="main-container">
         {% if messages %}
         <div class="mb-8 flex flex-col gap-2">
             {% for message in messages %}
-            <div class="msg-toast bg-white/10 border border-white/20 text-white px-6 py-4 rounded-xl flex items-center gap-4 shadow-[0_0_30px_rgba(255,255,255,0.1)]">
+            <div
+                class="msg-toast bg-white/10 border border-white/20 text-white px-6 py-4 rounded-xl flex items-center gap-4 shadow-[0_0_30px_rgba(255,255,255,0.1)]">
                 <div class="w-8 h-8 bg-white text-black rounded-full flex items-center justify-center font-bold">!</div>
                 <p class="text-sm font-mono uppercase tracking-wider">{{ message }}</p>
             </div>
@@ -68,37 +242,59 @@
         <header class="flex justify-between items-end mb-12">
             <div>
                 <span class="mono-tag opacity-40">StudyVault // Database</span>
-                <h1 class="text-6xl font-black italic tracking-tighter mt-2">Knowledge <span class="text-white/20">Base.</span></h1>
+                <h1 class="text-6xl font-black italic tracking-tighter mt-2">Knowledge <span
+                        class="text-white/20">Base.</span></h1>
             </div>
-            <form method="get" class="flex items-center gap-4 bg-white/5 border border-white/10 rounded-full px-4 py-2 w-96 focus-within:bg-white/10 transition-colors">
-                <svg class="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                <input type="text" name="q" value="{{ query }}" placeholder="Search intelligence nodes..." class="bg-transparent text-sm w-full focus:outline-none placeholder-zinc-600">
+            <form method="get"
+                class="flex items-center gap-4 bg-white/5 border border-white/10 rounded-full px-4 py-2 w-96 focus-within:bg-white/10 transition-colors">
+                <svg class="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <input type="text" name="q" value="{{ query }}" placeholder="Search intelligence nodes..."
+                    class="bg-transparent text-sm w-full focus:outline-none placeholder-zinc-600">
             </form>
         </header>
 
         <div class="mb-12">
-            <div class="border border-dashed border-white/10 rounded-2xl p-8 hover:bg-white/5 transition-colors group relative overflow-hidden">
-                <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]"></div>
-                
-                <form id="upload-form" method="post" enctype="multipart/form-data" class="flex items-center gap-8 relative z-10" onsubmit="showLoading()">
+            <div
+                class="border border-dashed border-white/10 rounded-2xl p-8 hover:bg-white/5 transition-colors group relative overflow-hidden">
+                <div
+                    class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]">
+                </div>
+
+                <form id="upload-form" method="post" enctype="multipart/form-data"
+                    class="flex items-center gap-8 relative z-10" onsubmit="showLoading()">
                     {% csrf_token %}
                     <div class="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center shrink-0">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
                     </div>
-                    <div class="flex-1">
-                        <div class="flex justify-between items-end mb-2">
-                            <input type="text" name="title" placeholder="Node Title (Start with 'CHO' to auto-add to Syllabus)" required class="bg-transparent text-xl font-bold placeholder-white/20 w-full focus:outline-none">
+                    <div class="flex-1 space-y-4">
+                        <div class="flex gap-4">
+                            <input type="text" name="title" placeholder="Node Title ('Datesheet' or 'CHO...')" required
+                                class="bg-transparent text-xl font-bold placeholder-white/20 w-full focus:outline-none flex-1">
+
+                            <input type="text" name="user_semester" placeholder="SEM (e.g. 3)"
+                                class="bg-white/5 border border-white/10 rounded px-3 py-1 text-sm w-24 text-center focus:border-white/50 outline-none uppercase font-mono"
+                                title="Required for Datesheet Extraction">
                         </div>
-                        <input type="file" name="file" required class="text-xs text-zinc-500 file:mr-4 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-[10px] file:bg-white/10 file:text-white hover:file:bg-white/20">
+
+                        <input type="file" name="file" required
+                            class="text-xs text-zinc-500 file:mr-4 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-[10px] file:bg-white/10 file:text-white hover:file:bg-white/20">
                     </div>
-                    <button type="submit" class="bg-white text-black px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-wider hover:scale-105 transition-transform">Ingest Data</button>
+                    <button type="submit"
+                        class="bg-white text-black px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-wider hover:scale-105 transition-transform">Ingest
+                        Data</button>
                 </form>
             </div>
         </div>
 
         <div class="flex items-center gap-4 mb-8">
             <span class="mono-tag">
-                {% if query %} Found {{ notes.count }} results for "{{ query }}" {% else %} All Knowledge Nodes ({{ notes.count }}) {% endif %}
+                {% if query %} Found {{ notes.count }} results for "{{ query }}" {% else %} All Knowledge Nodes ({{
+                notes.count }}) {% endif %}
             </span>
             <div class="h-px flex-1 bg-white/5"></div>
         </div>
@@ -107,23 +303,31 @@
             {% for note in notes %}
             <div class="card-vault p-6 flex flex-col justify-between group h-64 relative" id="note-card-{{ note.id }}">
                 <div class="flex justify-between items-start">
-                    <div class="w-12 h-12 bg-zinc-900 rounded-xl flex items-center justify-center border border-white/10 group-hover:bg-white group-hover:text-black transition-colors duration-500">
+                    <div
+                        class="w-12 h-12 bg-zinc-900 rounded-xl flex items-center justify-center border border-white/10 group-hover:bg-white group-hover:text-black transition-colors duration-500">
                         <span class="font-bold text-xs">PDF</span>
                     </div>
                     <div class="relative">
-                        <button onclick="toggleMenu('{{ note.id }}')" class="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
+                        <button onclick="toggleMenu('{{ note.id }}')"
+                            class="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                            </svg>
                         </button>
                         <div id="menu-{{ note.id }}" class="options-menu">
                             <button onclick="enableRename('{{ note.id }}')">Rename</button>
-                            <a href="{% url 'delete_note' note.id %}" class="text-red-400 hover:!bg-red-500/20">Delete</a>
+                            <a href="{% url 'delete_note' note.id %}"
+                                class="text-red-400 hover:!bg-red-500/20">Delete</a>
                         </div>
                     </div>
                 </div>
                 <div>
                     <div id="view-mode-{{ note.id }}">
                         <a href="{{ note.file.url }}" target="_blank" class="block">
-                            <h3 class="text-xl font-bold leading-tight mb-2 line-clamp-2 hover:underline decoration-white/30 underline-offset-4">{{ note.title }}</h3>
+                            <h3
+                                class="text-xl font-bold leading-tight mb-2 line-clamp-2 hover:underline decoration-white/30 underline-offset-4">
+                                {{ note.title }}</h3>
                         </a>
                         <div class="flex items-center gap-2 text-[10px] mono-tag opacity-50">
                             <span>{{ note.uploaded_at|date:"M d, Y" }}</span>
@@ -131,9 +335,11 @@
                             <span>{{ note.file.size|filesizeformat }}</span>
                         </div>
                     </div>
-                    <form id="rename-mode-{{ note.id }}" action="{% url 'rename_note' note.id %}" method="post" class="hidden">
+                    <form id="rename-mode-{{ note.id }}" action="{% url 'rename_note' note.id %}" method="post"
+                        class="hidden">
                         {% csrf_token %}
-                        <input type="text" name="new_title" value="{{ note.title }}" class="rename-input mb-2" onblur="this.form.submit()" autofocus>
+                        <input type="text" name="new_title" value="{{ note.title }}" class="rename-input mb-2"
+                            onblur="this.form.submit()" autofocus>
                         <p class="text-[10px] text-zinc-500">Press Enter to save</p>
                     </form>
                 </div>
@@ -154,7 +360,7 @@
 
         function toggleMenu(id) {
             const menu = document.getElementById(`menu-${id}`);
-            document.querySelectorAll('.options-menu').forEach(el => { if(el !== menu) el.style.display = 'none'; });
+            document.querySelectorAll('.options-menu').forEach(el => { if (el !== menu) el.style.display = 'none'; });
             menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
         }
 
@@ -166,7 +372,7 @@
             toggleMenu(id);
         }
 
-        document.addEventListener('click', function(event) {
+        document.addEventListener('click', function (event) {
             if (!event.target.closest('button') && !event.target.closest('.options-menu')) {
                 document.querySelectorAll('.options-menu').forEach(el => el.style.display = 'none');
             }
@@ -180,4 +386,5 @@
         });
     </script>
 </body>
+
 </html>

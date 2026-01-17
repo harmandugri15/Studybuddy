@@ -6,14 +6,15 @@ from django.utils import timezone
 from django.contrib import messages
 from django.views.decorators.http import require_POST
 from django.db.models import Avg, Count, Q
-from .models import Note, Exam, Topic, Profile
-from .forms import NoteForm, ExamForm
+from .models import Note, Exam, Topic, Profile, Squad, Membership, Transmission
+from .forms import NoteForm, ExamForm, SquadForm, JoinSquadForm
 import os
 import re
 from datetime import datetime, timedelta
 from collections import Counter
 import json
 from django.contrib.auth import logout
+from django.http import JsonResponse
 
 # --- PDF & OCR LIBRARIES ---
 import pdfplumber
@@ -30,7 +31,6 @@ def signout(request):
     return redirect('home')
 
 def signin(request):
-    
     if request.user.is_authenticated:
         return redirect('dashboard')
     
@@ -63,7 +63,7 @@ def dashboard(request):
             Topic.objects.create(exam=exam, name=topic_name, is_cho=False)
             return redirect('dashboard')
 
-    # --- TOGGLE LOGIC ---
+    # --- TOGGLE LOGIC (Fallback/Dashboard Specific) ---
     if request.method == 'POST' and 'toggle_topic' in request.POST:
         topic_id = request.POST.get('topic_id')
         topic = get_object_or_404(Topic, id=topic_id, exam__user=request.user)
@@ -78,12 +78,8 @@ def dashboard(request):
     # =========================================
     # 1. FETCH ALL DATA
     # =========================================
-    # All active exams (excluding Datesheet entries)
     all_active_exams = Exam.objects.filter(user=request.user, is_datesheet_entry=False)
     
-    # 1a. PRIMARY OBJECTIVE LOGIC (Most Completed First)
-    # We sort the exams by their progress() method in descending order
-    # If no progress, it defaults to sorting by ID
     active_exams_list = list(all_active_exams)
     active_exams_list.sort(key=lambda x: x.progress(), reverse=True)
     
@@ -92,14 +88,12 @@ def dashboard(request):
     # =========================================
     # 2. SKILL TREE DATA (CHO ONLY)
     # =========================================
-    # Filter: Only exams that have at least one Topic marked as is_cho=True
     cho_only_missions = Exam.objects.filter(
         user=request.user, 
         is_datesheet_entry=False, 
         topics__is_cho=True
     ).distinct()
 
-    # Sort these by task count (size of syllabus) to find the biggest subjects
     top_cho_qs = cho_only_missions.annotate(task_count=Count('topics')).order_by('-task_count')[:5]
     
     skill_labels = []
@@ -109,7 +103,6 @@ def dashboard(request):
         skill_labels.append(m.subject)
         skill_values.append(m.progress())
     
-    # Pad defaults if less than 5 CHO missions exist
     while len(skill_labels) < 5:
         skill_labels.append("LOCKED")
         skill_values.append(0)
@@ -118,7 +111,6 @@ def dashboard(request):
     # 3. STATS CALCULATIONS
     # =========================================
     total_missions = all_active_exams.count()
-    # Skills count is now strictly CHO based
     total_skills = cho_only_missions.count()
     
     completed_tasks = Topic.objects.filter(exam__user=request.user, is_completed=True).count()
@@ -178,12 +170,11 @@ def dashboard(request):
             intensity = 1 if count == 1 else (2 if count <= 3 else 3)
         activity_grid.append({'date': loop_date.strftime("%b %d"), 'count': count, 'height': height_pct, 'intensity': intensity})
 
-    # Upcoming List (Standard Sort by Date)
     upcoming_exams = Exam.objects.filter(user=request.user, date__gte=timezone.now()).order_by('date')
     online_count = Profile.objects.filter(last_seen__gte=timezone.now() - timezone.timedelta(minutes=5)).exclude(user=request.user).count()
 
     context = {
-        'main_exam': main_exam, # Now sorted by HIGHEST PROGRESS
+        'main_exam': main_exam,
         'upcoming_exams': upcoming_exams,
         'online_count': online_count,
         'exam_form': ExamForm(),
@@ -192,8 +183,6 @@ def dashboard(request):
         'streak': streak,
         'total_skills': total_skills,
         'global_completion': global_completion,
-        
-        # Skill Tree Data (CHO Only)
         'skill_1': skill_labels[0],
         'skill_2': skill_labels[1],
         'skill_3': skill_labels[2],
@@ -201,12 +190,10 @@ def dashboard(request):
         'skill_5': skill_labels[4],
         'skill_values': json.dumps(skill_values), 
         'skill_labels_list': json.dumps(skill_labels),
-        
         'activity_grid': activity_grid,
     }
     return render(request, 'dashboard.html', context)
 
-# ... (Keep remaining views unchanged) ...
 @login_required(login_url='signin')
 def notes_hub(request):
     query = request.GET.get('q')
@@ -222,17 +209,11 @@ def notes_hub(request):
             filename = note.file.name.lower()
             title = note.title.upper()
 
-            # ====================================================
-            # 1. HIGH-RES DATESHEET EXTRACTION (OCR)
-            # ====================================================
+            # OCR Logic for Datesheets
             if "DATESHEET" in title or "DATESHEET" in filename.upper():
-                print("--- STARTING HIGH-RES DATESHEET SCAN ---")
                 extracted_count = 0
-                
                 try:
                     images = convert_from_path(note.file.path, poppler_path=POPPLER_PATH, dpi=400)
-                    print(f"Processing {len(images)} pages...")
-
                     for i, img in enumerate(images):
                         width, height = img.size
                         img = img.resize((width * 2, height * 2), Image.Resampling.LANCZOS)
@@ -246,7 +227,6 @@ def notes_hub(request):
                         for line in lines:
                             line = line.strip()
                             if len(line) < 10: continue
-                            
                             clean_line = line.replace('|', ' ').replace('!', ' ').replace(']', '1').upper()
                             clean_line = clean_line.replace('O', '0').replace('L', '1').replace('I', '1')
 
@@ -257,8 +237,7 @@ def notes_hub(request):
                                 date_str = date_match.group(0)
                                 sem_label = "Unknown"
                                 sem_match = re.search(r'(\d+)\s*SEM', clean_line)
-                                if sem_match:
-                                    sem_label = f"Sem {sem_match.group(1)}"
+                                if sem_match: sem_label = f"Sem {sem_match.group(1)}"
 
                                 temp = clean_line.replace(date_str, '')
                                 temp = re.sub(r'\d+\s*SEM', '', temp)
@@ -288,12 +267,8 @@ def notes_hub(request):
                                                 details=f"{sem_label} [Extracted]"
                                             )
                                             extracted_count += 1
-                                            print(f"-> Saved: {subject_name}")
-                                    except Exception as e:
-                                        print(f"-> Date Skip: {e}")
-
+                                    except Exception: pass
                 except Exception as e:
-                    print(f"CRITICAL ERROR: {e}")
                     messages.error(request, f"Error: {e}")
 
                 if extracted_count > 0:
@@ -301,18 +276,13 @@ def notes_hub(request):
                 else:
                     messages.warning(request, "Scanned file but found no readable dates.")
 
-            # ====================================================
-            # 2. SYLLABUS EXTRACTION (CHO FILES) - UPDATED!
-            # ====================================================
+            # CHO Extraction Logic
             elif title.startswith('CHO') and filename.endswith('.pdf'):
-                # CHANGE: Always create a NEW Exam for every CHO file.
-                # Use the file Title as the Mission Name.
-                # Default date = 30 days from now (User can edit later).
                 target_exam = Exam.objects.create(
                     user=request.user, 
-                    subject=title,  # Sets name to "CHO DA" etc.
+                    subject=title,
                     date=timezone.now() + timezone.timedelta(days=30),
-                    is_datesheet_entry=False # Marks it as a Manual Mission
+                    is_datesheet_entry=False
                 )
                 messages.success(request, f"Initialized new protocol: {title}")
                 
@@ -340,9 +310,7 @@ def notes_hub(request):
                     
                     if extracted_count > 0:
                         messages.success(request, f"⚡ MAPPED {extracted_count} MODULES TO {title}.")
-
-                except Exception as e:
-                    print(f"Error: {e}")
+                except Exception:
                     messages.error(request, "File structure incompatible.")
             
             return redirect('notes_hub')
@@ -360,16 +328,12 @@ def notes_hub(request):
 
 @login_required(login_url='signin')
 def topics_hub(request):
-    if request.method == 'POST' and 'toggle_topic' in request.POST:
-        topic_id = request.POST.get('topic_id')
-        topic = get_object_or_404(Topic, id=topic_id, exam__user=request.user)
-        topic.is_completed = not topic.is_completed
-        if topic.is_completed: topic.completed_at = timezone.now()
-        else: topic.completed_at = None
-        topic.save()
-        return redirect('topics_hub')
+    # Standard view only fetches data. Post logic removed for AJAX handling.
     exams = Exam.objects.filter(user=request.user, is_datesheet_entry=False, topics__is_cho=True).distinct().order_by('date')
-    context = {'exams': exams, 'online_count': Profile.objects.filter(last_seen__gte=timezone.now() - timezone.timedelta(minutes=5)).exclude(user=request.user).count()}
+    context = {
+        'exams': exams, 
+        'online_count': Profile.objects.filter(last_seen__gte=timezone.now() - timezone.timedelta(minutes=5)).exclude(user=request.user).count()
+    }
     return render(request, 'topics_hub.html', context)
 
 @login_required(login_url='signin')
@@ -448,16 +412,8 @@ def clear_datesheet(request):
 def home(request):
     return render(request, 'index.html')
 
-
-# ... (Imports remain the same) ...
-from .models import Squad, Membership, Transmission # Import new models
-from .forms import NoteForm, ExamForm, SquadForm, JoinSquadForm # Import new forms
-
-# ... (Keep existing views) ...
-
 @login_required(login_url='signin')
 def squad_hub(request):
-    # Get all squads the user belongs to
     my_memberships = Membership.objects.filter(user=request.user)
     my_squads = [m.squad for m in my_memberships]
 
@@ -465,19 +421,16 @@ def squad_hub(request):
     join_form = JoinSquadForm()
 
     if request.method == 'POST':
-        # HANDLE CREATE
         if 'create_squad' in request.POST:
             create_form = SquadForm(request.POST)
             if create_form.is_valid():
                 squad = create_form.save(commit=False)
                 squad.created_by = request.user
                 squad.save()
-                # Automatically add creator as Leader
                 Membership.objects.create(user=request.user, squad=squad, is_leader=True)
                 messages.success(request, f"Squadron '{squad.name}' deployed.")
                 return redirect('squad_hub')
         
-        # HANDLE JOIN
         elif 'join_squad' in request.POST:
             join_form = JoinSquadForm(request.POST)
             if join_form.is_valid():
@@ -501,27 +454,22 @@ def squad_hub(request):
     }
     return render(request, 'squad_hub.html', context)
 
-# ... (Keep existing imports) ...
-
 @login_required(login_url='signin')
 def squad_detail(request, squad_id):
     squad = get_object_or_404(Squad, id=squad_id)
     
-    # Security Check: Ensure user is a member
     if not Membership.objects.filter(user=request.user, squad=squad).exists():
         messages.error(request, "Access Denied: You are not an operative of this squadron.")
         return redirect('squad_hub')
 
-    # Handle Chat Message
     if request.method == 'POST' and 'send_transmission' in request.POST:
         content = request.POST.get('content')
         if content:
             Transmission.objects.create(squad=squad, sender=request.user, content=content)
             return redirect('squad_detail', squad_id=squad.id)
 
-    # Get Data
     members = Membership.objects.filter(squad=squad).select_related('user')
-    transmissions = squad.messages.all().order_by('timestamp') # Oldest first for chat log
+    transmissions = squad.messages.all().order_by('timestamp')
 
     context = {
         'squad': squad,
@@ -531,13 +479,42 @@ def squad_detail(request, squad_id):
     }
     return render(request, 'squad_detail.html', context)
 
-# Add this under your squad_detail view
 @login_required(login_url='signin')
 def get_squad_messages(request, squad_id):
     squad = get_object_or_404(Squad, id=squad_id)
-    # Security check (optional but recommended)
     if not Membership.objects.filter(user=request.user, squad=squad).exists():
-        return HttpResponseForbidden()
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
         
     transmissions = squad.messages.all().order_by('timestamp')
     return render(request, 'partials/chat_messages.html', {'transmissions': transmissions, 'user': request.user})
+
+# ====================================================
+# NEW: REFRESH-FREE AJAX VIEWS
+# ====================================================
+
+@login_required
+def toggle_topic_status(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            topic_id = data.get('topic_id')
+            is_completed = data.get('completed')
+
+            topic = Topic.objects.get(id=topic_id, exam__user=request.user)
+            topic.is_completed = is_completed
+            if topic.is_completed:
+                topic.completed_at = timezone.now()
+            else:
+                topic.completed_at = None
+            topic.save()
+            return JsonResponse({'success': True})
+        except (Topic.DoesNotExist, json.JSONDecodeError):
+            return JsonResponse({'success': False, 'error': 'Invalid request'})
+    
+    return JsonResponse({'success': False}, status=400)
+
+@login_required
+def delete_topic(request, topic_id):
+    topic = get_object_or_404(Topic, id=topic_id, exam__user=request.user)
+    topic.delete()
+    return redirect('topics_hub')

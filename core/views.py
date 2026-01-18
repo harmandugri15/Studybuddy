@@ -15,6 +15,7 @@ from collections import Counter
 import json
 from django.contrib.auth import logout
 from django.http import JsonResponse
+from . import rag 
 
 # --- PDF & OCR LIBRARIES ---
 import pdfplumber
@@ -209,7 +210,9 @@ def notes_hub(request):
             filename = note.file.name.lower()
             title = note.title.upper()
 
-            # OCR Logic for Datesheets
+            # ==========================================
+            # 1. DATESHEET LOGIC (OCR)
+            # ==========================================
             if "DATESHEET" in title or "DATESHEET" in filename.upper():
                 extracted_count = 0
                 try:
@@ -276,7 +279,9 @@ def notes_hub(request):
                 else:
                     messages.warning(request, "Scanned file but found no readable dates.")
 
-            # CHO Extraction Logic
+            # ==========================================
+            # 2. CHO SYLLABUS LOGIC
+            # ==========================================
             elif title.startswith('CHO') and filename.endswith('.pdf'):
                 target_exam = Exam.objects.create(
                     user=request.user, 
@@ -313,18 +318,35 @@ def notes_hub(request):
                 except Exception:
                     messages.error(request, "File structure incompatible.")
             
+            # ==========================================
+            # 3. RAG / AI BRAIN LOGIC (New Addition)
+            # ==========================================
+            else:
+                # If it is NOT a Datesheet and NOT a CHO Syllabus, feed it to the AI
+                success = rag.add_note_to_vault(note)
+                if success:
+                    messages.success(request, "✅ Neural Index Updated: Note added to AI knowledge base.")
+                else:
+                    messages.warning(request, "⚠️ Note saved, but AI indexing failed (File might be too short or unreadable).")
+
             return redirect('notes_hub')
     
+    # --- GET REQUEST (Display Notes) ---
     notes = Note.objects.filter(user=request.user).order_by('-uploaded_at')
     if query:
         notes = notes.filter(title__icontains=query)
+    
+    # Calculate online count for the sidebar/footer if needed
+    online_count = Profile.objects.filter(last_seen__gte=timezone.now() - timezone.timedelta(minutes=5)).exclude(user=request.user).count()
 
     context = {
         'notes': notes,
         'query': query if query else '',
-        'online_count': Profile.objects.filter(last_seen__gte=timezone.now() - timezone.timedelta(minutes=5)).exclude(user=request.user).count()
+        'online_count': online_count,
+        'form': NoteForm() # Ensure form is passed for the modal
     }
     return render(request, 'notes_hub.html', context)
+
 
 @login_required(login_url='signin')
 def topics_hub(request):
@@ -518,3 +540,20 @@ def delete_topic(request, topic_id):
     topic = get_object_or_404(Topic, id=topic_id, exam__user=request.user)
     topic.delete()
     return redirect('topics_hub')
+
+
+# --- NEW CHAT VIEW ---
+@login_required
+@require_POST
+def vault_chat(request):
+    try:
+        data = json.loads(request.body)
+        question = data.get('message')
+        if not question:
+            return JsonResponse({'answer': 'Empty transmission.'})
+
+        # Ask the brain
+        answer = rag.ask_vault(request.user, question)
+        return JsonResponse({'answer': answer})
+    except Exception as e:
+        return JsonResponse({'answer': f"System Error: {str(e)}"})

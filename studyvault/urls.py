@@ -31,6 +31,7 @@ urlpatterns = [
     # NEW: Refresh-Free Logic & Delete Topic
     path('api/toggle-topic/', views.toggle_topic_status, name='toggle_topic_status'),
     path('syllabus/delete/<int:topic_id>/', views.delete_topic, name='delete_topic'),
+    path('api/vault-chat/', views.vault_chat, name='vault_chat'),
 
     # Auth
     path('accounts/', include('allauth.urls')),
